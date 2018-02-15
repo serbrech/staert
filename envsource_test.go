@@ -588,6 +588,89 @@ func TestEnvVarFromPath(t *testing.T) {
 
 }
 
+// Users authentication users
+type Users []string
+
+type Basic struct {
+	Users     `mapstructure:","`
+	UsersFile string
+}
+
+type testcase struct {
+	Source      interface{}
+	Expectation []*envValue
+	Env         map[string]string
+	Then        testAnalyzeStructThenHook
+}
+
+func TestWithArray(t *testing.T) {
+
+	config := struct {
+		StringArray []string
+	}{}
+	testCase := struct {
+		Source      interface{}
+		Expectation []*envValue
+		Env         map[string]string
+		Then        testAnalyzeStructThenHook
+	}{
+		&config,
+		[]*envValue{
+			&envValue{"one", path{"StringArray", "0"}},
+			&envValue{"two", path{"StringArray", "1"}},
+		},
+		map[string]string{
+			"STRING_ARRAY_0": "one",
+			"STRING_ARRAY_1": "two",
+		},
+		testAnalyzeStructShouldSucceed,
+	}
+
+	setupEnv(testCase.Env)
+	subject := &envSource{"", "_", map[reflect.Type]parse.Parser{}}
+	res, err := subject.analyzeStruct(
+		reflect.TypeOf(testCase.Source).Elem(),
+		path{},
+	)
+	testCase.Then(t, testCase.Expectation, res, err)
+	configVal := reflect.Indirect(reflect.ValueOf(config))
+	subject.assignValues(configVal, res)
+
+	cleanupEnv(testCase.Env)
+}
+
+func TestWithSliceToValue(t *testing.T) {
+	config := &struct {
+		Config []int
+	}{}
+	testCase := testcase{
+		config,
+		[]*envValue{
+			&envValue{"FOOO", path{"Config", "0"}},
+			&envValue{"10", path{"Config", "1"}},
+			&envValue{"true", path{"Config", "2"}},
+		},
+		map[string]string{
+			"CONFIG_0": "FOOO",
+			"CONFIG_1": "10",
+			"CONFIG_2": "true",
+		},
+		testAnalyzeStructShouldSucceed,
+	}
+
+	setupEnv(testCase.Env)
+	subject := &envSource{"", "_", map[reflect.Type]parse.Parser{}}
+	res, err := subject.analyzeStruct(
+		reflect.TypeOf(testCase.Source).Elem(),
+		path{},
+	)
+	testCase.Then(t, testCase.Expectation, res, err)
+	configVal := reflect.ValueOf(config).Elem()
+	subject.assignValues(configVal, res)
+
+	cleanupEnv(testCase.Env)
+}
+
 func TestNextLevelKeys(t *testing.T) {
 	subject := &envSource{"", "_", map[reflect.Type]parse.Parser{}}
 	testCases := []struct {
@@ -749,13 +832,11 @@ func (s testStringParser) Get() interface{} {
 }
 
 func TestAssignValues(t *testing.T) {
-	var stringParserValue testStringParser
+	parsers, _ := parse.LoadParsers(nil)
 	subject := &envSource{
 		"",
 		"_",
-		map[reflect.Type]parse.Parser{
-			reflect.TypeOf(""): &stringParserValue,
-		},
+		parsers,
 	}
 
 	testCases := []struct {
@@ -765,7 +846,7 @@ func TestAssignValues(t *testing.T) {
 		Expectation interface{}
 	}{
 		{
-			"BasicStuct",
+			"BasicStruct",
 			&struct {
 				StringValue      string
 				OtherStringValue string
@@ -778,6 +859,21 @@ func TestAssignValues(t *testing.T) {
 				StringValue      string
 				OtherStringValue string
 			}{"FOO", "BAR"},
+		},
+		{
+			"BasicStruct",
+			&struct {
+				StringValue string
+				IntValue    int
+			}{},
+			[]*envValue{
+				&envValue{"FOO", path{"StringValue"}},
+				&envValue{"1", path{"IntValue"}},
+			},
+			&struct {
+				StringValue string
+				IntValue    int
+			}{"FOO", 1},
 		},
 	}
 

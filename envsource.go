@@ -197,36 +197,38 @@ func (e *envSource) loadValue(fieldPath path) []*envValue {
 	return []*envValue{&envValue{value, fieldPath.clone()}}
 }
 
-func (e *envSource) assignValues(configVal reflect.Value, values []*envValue) error {
-	for _, v := range values {
-		currentValue := configVal
-		for _, p := range v.Path {
-			currentValue = currentValue.FieldByName(p)
-
-			if e.needsAllocation(currentValue) {
-				var err error
-				currentValue, err = e.allocate(currentValue)
-				if err != nil {
-					return err
-				}
+func (e *envSource) assignValues(configVal reflect.Value, envValues []*envValue) error {
+	//loop on env we found earlier
+	//currentValue := configVal
+	for _, v := range envValues {
+		fieldVal := configVal.FieldByName(v.Path[0])
+		switch fieldVal.Kind() {
+		case reflect.Struct:
+		default:
+			if parser, ok := e.parsers[fieldVal.Type()]; ok {
+				parser.Set(v.StrValue)
+				fieldVal.Set(reflect.ValueOf(parser.Get()))
+			} else {
+				fmt.Printf("PARSER NOT FOUND : %T\n", parser)
 			}
 		}
-
-		if err := e.setValue(currentValue, v.StrValue); err != nil {
-			return err
-		}
+		//fieldVal.Set(reflect.ValueOf(v.StrValue))
 	}
+
 	return nil
 }
 
+func handleSlice(value reflect.Value, sliceVal reflect.Value) {
+	println("%s - %s", value.Kind(), sliceVal.Kind())
+}
+
 func (e *envSource) needsAllocation(value reflect.Value) bool {
-	// TODO
-	return false
+	return value.IsNil()
 }
 
 func (e *envSource) allocate(value reflect.Value) (reflect.Value, error) {
-	// TODO
-	return value, nil
+	instValue := reflect.New(value.Type().Elem())
+	return instValue, nil
 }
 
 func (e *envSource) setValue(value reflect.Value, strValue string) error {
