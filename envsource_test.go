@@ -861,7 +861,7 @@ func TestAssignValues(t *testing.T) {
 			}{"FOO", "BAR"},
 		},
 		{
-			"BasicStruct",
+			"BasicStructWithParser",
 			&struct {
 				StringValue string
 				IntValue    int
@@ -874,6 +874,27 @@ func TestAssignValues(t *testing.T) {
 				StringValue string
 				IntValue    int
 			}{"FOO", 1},
+		},
+		{
+			"BasicStructEmbedded",
+			&struct {
+				StringValue string
+				Next        basicAppConfig
+			}{},
+			[]*envValue{
+				&envValue{"FOO", path{"StringValue"}},
+				&envValue{"1", path{"Next", "IntValue"}},
+				&envValue{"true", path{"Next", "BoolValue"}},
+				&envValue{"string", path{"Next", "StringValue"}},
+			},
+			&struct {
+				StringValue string
+				Next        basicAppConfig
+			}{"FOO", basicAppConfig{
+				BoolValue:   true,
+				IntValue:    1,
+				StringValue: "string",
+			}},
 		},
 	}
 

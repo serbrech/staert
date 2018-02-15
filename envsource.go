@@ -202,8 +202,18 @@ func (e *envSource) assignValues(configVal reflect.Value, envValues []*envValue)
 	//currentValue := configVal
 	for _, v := range envValues {
 		fieldVal := configVal.FieldByName(v.Path[0])
+
 		switch fieldVal.Kind() {
+
 		case reflect.Struct:
+			fmt.Printf("%v : STRUCT!\n", fieldVal)
+			fmt.Printf("%v : STRUCT!\n", fieldVal.Type())
+			v.Path = v.Path[1:]
+			err := e.assignValues(fieldVal, []*envValue{v})
+			if err != nil {
+				return err
+			}
+			break
 		default:
 			if parser, ok := e.parsers[fieldVal.Type()]; ok {
 				parser.Set(v.StrValue)
