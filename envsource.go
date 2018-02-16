@@ -198,16 +198,27 @@ func (e *envSource) loadValue(fieldPath path) []*envValue {
 }
 
 func (e *envSource) assignValues(configVal reflect.Value, envValues []*envValue) error {
-	//loop on env we found earlier
-	//currentValue := configVal
+
+	if configVal.Kind() == reflect.Ptr {
+		if configVal.IsNil() {
+			configVal.Set(reflect.New((configVal.Type().Elem())))
+		}
+		err := e.assignValues(configVal.Elem(), envValues)
+		return err
+	}
+
 	for _, v := range envValues {
 		fieldVal := configVal.FieldByName(v.Path[0])
-
 		switch fieldVal.Kind() {
 
+		case reflect.Ptr:
+			v.Path = v.Path[1:]
+			err := e.assignValues(fieldVal, []*envValue{v})
+			if err != nil {
+				return err
+			}
+			break
 		case reflect.Struct:
-			fmt.Printf("%v : STRUCT!\n", fieldVal)
-			fmt.Printf("%v : STRUCT!\n", fieldVal.Type())
 			v.Path = v.Path[1:]
 			err := e.assignValues(fieldVal, []*envValue{v})
 			if err != nil {
@@ -222,7 +233,6 @@ func (e *envSource) assignValues(configVal reflect.Value, envValues []*envValue)
 				fmt.Printf("PARSER NOT FOUND : %T\n", parser)
 			}
 		}
-		//fieldVal.Set(reflect.ValueOf(v.StrValue))
 	}
 
 	return nil

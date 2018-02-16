@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/containous/flaeg/parse"
+	"github.com/stretchr/testify/assert"
 )
 
 func setupEnv(env map[string]string) {
@@ -838,6 +839,18 @@ func TestAssignValues(t *testing.T) {
 		"_",
 		parsers,
 	}
+	configPtr := &basicAppConfig{
+		BoolValue:   true,
+		IntValue:    1,
+		StringValue: "string",
+	}
+	expectedPtrPtr := &struct {
+		StringValue string
+		NextPointer **basicAppConfig
+	}{
+		StringValue: "FOO",
+	}
+	expectedPtrPtr.NextPointer = &configPtr
 
 	testCases := []struct {
 		Label       string
@@ -896,6 +909,41 @@ func TestAssignValues(t *testing.T) {
 				StringValue: "string",
 			}},
 		},
+		{
+			"BasicStructPointer",
+			&struct {
+				StringValue string
+				NextPointer *basicAppConfig
+			}{},
+			[]*envValue{
+				&envValue{"FOO", path{"StringValue"}},
+				&envValue{"1", path{"NextPointer", "IntValue"}},
+				&envValue{"true", path{"NextPointer", "BoolValue"}},
+				&envValue{"string", path{"NextPointer", "StringValue"}},
+			},
+			&struct {
+				StringValue string
+				NextPointer *basicAppConfig
+			}{"FOO", &basicAppConfig{
+				BoolValue:   true,
+				IntValue:    1,
+				StringValue: "string",
+			}},
+		},
+		{
+			"BasicStructPointerPointer",
+			&struct {
+				StringValue string
+				NextPointer **basicAppConfig
+			}{},
+			[]*envValue{
+				&envValue{"FOO", path{"StringValue"}},
+				&envValue{"1", path{"NextPointer", "IntValue"}},
+				&envValue{"true", path{"NextPointer", "BoolValue"}},
+				&envValue{"string", path{"NextPointer", "StringValue"}},
+			},
+			expectedPtrPtr,
+		},
 	}
 
 	for _, testCase := range testCases {
@@ -906,10 +954,7 @@ func TestAssignValues(t *testing.T) {
 				t.Fail()
 			}
 
-			if !reflect.DeepEqual(testCase.Expectation, testCase.Value) {
-				t.Logf("Incorrect assignation, expected %v got %v", testCase.Expectation, testCase.Value)
-				t.Fail()
-			}
+			assert.Exactly(t, testCase.Expectation, testCase.Value)
 		})
 	}
 }
