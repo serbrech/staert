@@ -131,6 +131,86 @@ func TestAssignValues(t *testing.T) {
 			},
 			expectedPtrPtr,
 		},
+		{
+			"WithWrongPath",
+			&delegatorType{},
+			[]*envValue{
+				&envValue{"FOO", path{"WrongPath"}},
+			},
+			&delegatorType{},
+		},
+		{
+			"WithInterfaceDelegation",
+			&delegatorType{},
+			[]*envValue{
+				&envValue{"FOO", path{"StringValue"}},
+				&envValue{"1", path{"IntValue"}},
+			},
+			&delegatorType{
+				IntValue:    1,
+				StringValue: "FOO",
+			},
+		},
+		{
+			"WithMapOfStringValues",
+			&struct {
+				Config map[string]string
+			}{},
+			[]*envValue{
+				&envValue{"FOO", path{"Config", "foo"}},
+				&envValue{"MEH", path{"Config", "bar"}},
+				&envValue{"BAR", path{"Config", "biz"}},
+			},
+			&struct {
+				Config map[string]string
+			}{
+				Config: map[string]string{
+					"foo": "FOO",
+					"bar": "MEH",
+					"biz": "BAR",
+				},
+			},
+		},
+		{
+			"CanParseMapValues",
+			&struct {
+				Config map[string]int
+			}{},
+			[]*envValue{
+				&envValue{"1", path{"Config", "foo"}},
+				&envValue{"2", path{"Config", "bar"}},
+				&envValue{"3", path{"Config", "biz"}},
+			},
+			&struct {
+				Config map[string]int
+			}{
+				Config: map[string]int{
+					"foo": 1,
+					"bar": 2,
+					"biz": 3,
+				},
+			},
+		},
+		{
+			"CanParseMapValuesAndKeys",
+			&struct {
+				Config map[int]int
+			}{},
+			[]*envValue{
+				&envValue{"1", path{"Config", "1"}},
+				&envValue{"2", path{"Config", "2"}},
+				&envValue{"3", path{"Config", "3"}},
+			},
+			&struct {
+				Config map[int]int
+			}{
+				Config: map[int]int{
+					1: 1,
+					2: 2,
+					3: 3,
+				},
+			},
+		},
 	}
 
 	for _, testCase := range testCases {

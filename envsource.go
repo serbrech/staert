@@ -209,6 +209,10 @@ func (e *envSource) assignValues(configVal reflect.Value, envValues []*envValue)
 
 	for _, v := range envValues {
 		fieldVal := configVal.FieldByName(v.Path[0])
+		if !fieldVal.IsValid() {
+			//skip field that are found
+			continue
+		}
 		switch fieldVal.Kind() {
 
 		case reflect.Ptr:
@@ -225,6 +229,11 @@ func (e *envSource) assignValues(configVal reflect.Value, envValues []*envValue)
 				return err
 			}
 			break
+		case reflect.Map:
+			key := v.Path[1]
+			val := v.StrValue
+			e.assignMap(fieldVal, key, val)
+			break
 		default:
 			if parser, ok := e.parsers[fieldVal.Type()]; ok {
 				parser.Set(v.StrValue)
@@ -238,17 +247,38 @@ func (e *envSource) assignValues(configVal reflect.Value, envValues []*envValue)
 	return nil
 }
 
+func (e *envSource) assignMap(fieldVal reflect.Value, key string, val string) {
+	mapType := fieldVal.Type()
+	if fieldVal.IsNil() {
+		fieldVal.Set(reflect.MakeMap(mapType))
+	}
+	elemType := mapType.Elem()
+	keyType := mapType.Key()
+	//println("keyType is : %#s - elemType is : %#s", keyType.String(), elemType.String())
+	parsedVal, errV := e.getParsedValue(elemType, val)
+	parsedKey, errK := e.getParsedValue(keyType, key)
+	if errK == nil && errV == nil {
+		fmt.Printf("parsedKey : %#v - parsedValue : %#v ", parsedKey, parsedVal)
+		fieldVal.SetMapIndex(reflect.ValueOf(parsedKey), reflect.ValueOf(parsedVal))
+	} else {
+		//TODO: failed to parse a value, handle err, raise warning...
+	}
+}
+
+func (e *envSource) getParsedValue(valType reflect.Type, stringValue string) (interface{}, error) {
+	if parser, ok := e.parsers[valType]; ok {
+		err := parser.Set(stringValue)
+		if err != nil {
+			return nil, err
+		}
+		return parser.Get(), nil
+	}
+	//ERROR or WARNING AT LEAST, we could not parse the value, it should not be silenced.
+	return nil, fmt.Errorf("could not parse %s", stringValue)
+}
+
 func handleSlice(value reflect.Value, sliceVal reflect.Value) {
 	println("%s - %s", value.Kind(), sliceVal.Kind())
-}
-
-func (e *envSource) needsAllocation(value reflect.Value) bool {
-	return value.IsNil()
-}
-
-func (e *envSource) allocate(value reflect.Value) (reflect.Value, error) {
-	instValue := reflect.New(value.Type().Elem())
-	return instValue, nil
 }
 
 func (e *envSource) setValue(value reflect.Value, strValue string) error {
