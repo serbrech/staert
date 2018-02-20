@@ -262,38 +262,3 @@ func TestFilterEnvVarWithPrefix(t *testing.T) {
 	}
 	assert.Exactly(t, expected, result)
 }
-
-func TestReflect(t *testing.T) {
-	config := &struct {
-		Config map[string]basicAppConfig
-	}{
-		Config: map[string]basicAppConfig{
-			"foo": basicAppConfig{
-				StringValue: "FOO",
-				IntValue:    10,
-			},
-		},
-	}
-	mapVal := reflect.ValueOf(config.Config)
-	mapType := mapVal.Type()
-	elemType := mapType.Elem()
-
-	assert.Equal(t, reflect.Struct, elemType.Kind())
-	elemVal := reflect.New(elemType)
-	assert.NotNil(t, elemVal)
-
-	parsers, _ := parse.LoadParsers(nil)
-	subject := &envSource{
-		"",
-		"_",
-		parsers,
-	}
-	elemVal.Elem().FieldByName("StringValue").Set(reflect.ValueOf("hello!"))
-	elem := elemVal.Elem()
-	subject.assignMap(mapVal, "key", elem)
-
-	res := config.Config["key"]
-
-	assert.NotNil(t, res)
-	assert.Equal(t, "hello!", res.StringValue)
-}
