@@ -634,7 +634,7 @@ func TestWithArray(t *testing.T) {
 	)
 	testCase.Then(t, testCase.Expectation, res, err)
 	configVal := reflect.Indirect(reflect.ValueOf(config))
-	subject.assignValues(configVal, res)
+	subject.assignValues(configVal, res, []string{})
 
 	cleanupEnv(testCase.Env)
 }
@@ -666,7 +666,7 @@ func TestWithSliceToValue(t *testing.T) {
 	)
 	testCase.Then(t, testCase.Expectation, res, err)
 	configVal := reflect.ValueOf(config).Elem()
-	subject.assignValues(configVal, res)
+	subject.assignValues(configVal, res, []string{})
 
 	cleanupEnv(testCase.Env)
 }

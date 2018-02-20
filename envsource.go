@@ -54,7 +54,7 @@ func (e *envSource) LoadConfig(config interface{}) error {
 		return err
 	}
 
-	return e.assignValues(configVal, values)
+	return e.assignValues(configVal, values, []string{})
 }
 
 type envValue struct {
@@ -197,13 +197,17 @@ func (e *envSource) loadValue(fieldPath path) []*envValue {
 	return []*envValue{&envValue{value, fieldPath.clone()}}
 }
 
-func (e *envSource) assignValues(configVal reflect.Value, envValues []*envValue) error {
+func (e *envSource) assignValues(configVal reflect.Value, envValues []*envValue, currentPath []string) error {
+
+	if len(currentPath) > 0 {
+		envValues = filterEnvVarWithPrefix(envValues, currentPath)
+	}
 
 	if configVal.Kind() == reflect.Ptr {
 		if configVal.IsNil() {
 			configVal.Set(reflect.New((configVal.Type().Elem())))
 		}
-		err := e.assignValues(configVal.Elem(), envValues)
+		err := e.assignValues(configVal.Elem(), envValues, []string{})
 		return err
 	}
 
@@ -216,23 +220,34 @@ func (e *envSource) assignValues(configVal reflect.Value, envValues []*envValue)
 		switch fieldVal.Kind() {
 
 		case reflect.Ptr:
-			v.Path = v.Path[1:]
-			err := e.assignValues(fieldVal, []*envValue{v})
+			err := e.assignValues(fieldVal, []*envValue{v}, []string{v.Path[0]})
 			if err != nil {
 				return err
 			}
 			break
 		case reflect.Struct:
-			v.Path = v.Path[1:]
-			err := e.assignValues(fieldVal, []*envValue{v})
+			err := e.assignValues(fieldVal, []*envValue{v}, []string{v.Path[0]})
 			if err != nil {
 				return err
 			}
 			break
+		case reflect.Array:
+			key := v.Path[1]
+			val := v.StrValue
+			e.assignMap(fieldVal, key, reflect.ValueOf(val))
+			break
 		case reflect.Map:
 			key := v.Path[1]
 			val := v.StrValue
-			e.assignMap(fieldVal, key, val)
+			mapType := fieldVal.Type()
+			elemType := mapType.Elem()
+			if elemType.Kind() == reflect.Struct {
+				elem := reflect.New(elemType).Elem()
+				e.assignValues(elem, envValues, v.Path[:2])
+				e.assignMap(fieldVal, key, elem)
+			} else {
+				e.assignMap(fieldVal, key, reflect.ValueOf(val))
+			}
 			break
 		default:
 			if parser, ok := e.parsers[fieldVal.Type()]; ok {
@@ -241,13 +256,33 @@ func (e *envSource) assignValues(configVal reflect.Value, envValues []*envValue)
 			} else {
 				fmt.Printf("PARSER NOT FOUND : %T\n", parser)
 			}
+			break
 		}
 	}
 
 	return nil
 }
 
-func (e *envSource) assignMap(fieldVal reflect.Value, key string, val string) {
+func (e *envSource) assignMap(fieldVal reflect.Value, key string, val reflect.Value) {
+	mapType := fieldVal.Type()
+	if fieldVal.IsNil() {
+		fieldVal.Set(reflect.MakeMap(mapType))
+	}
+	elemType := mapType.Elem()
+	keyType := mapType.Key()
+	parsedKey, errKey := e.getParsedValue(keyType, key)
+	if errKey != nil {
+		//fail
+	}
+	if val.Kind() == reflect.String {
+		parsedVal, _ := e.getParsedValue(elemType, val.String())
+		fieldVal.SetMapIndex(reflect.ValueOf(parsedKey), reflect.ValueOf(parsedVal))
+	} else {
+		fieldVal.SetMapIndex(reflect.ValueOf(parsedKey), val)
+	}
+}
+
+func (e *envSource) assignArrays(fieldVal reflect.Value, key string, val string) {
 	mapType := fieldVal.Type()
 	if fieldVal.IsNil() {
 		fieldVal.Set(reflect.MakeMap(mapType))
@@ -261,7 +296,7 @@ func (e *envSource) assignMap(fieldVal reflect.Value, key string, val string) {
 		fmt.Printf("parsedKey : %#v - parsedValue : %#v ", parsedKey, parsedVal)
 		fieldVal.SetMapIndex(reflect.ValueOf(parsedKey), reflect.ValueOf(parsedVal))
 	} else {
-		//TODO: failed to parse a value, handle err, raise warning...
+		fmt.Printf("ERRORS :\n%v\n%v", errK, errV)
 	}
 }
 
@@ -373,5 +408,23 @@ func unique(in []string) []string {
 		res = append(res, v)
 	}
 
+	return res
+}
+
+func filterEnvVarWithPrefix(envValues []*envValue, startFilter []string) []*envValue {
+	res := []*envValue{}
+	startFilterPath := strings.Join(startFilter, "")
+	for _, currentEnvValue := range envValues {
+		if len(currentEnvValue.Path) >= len(startFilter) {
+			currentPath := strings.Join(currentEnvValue.Path[0:len(startFilter)], "")
+			if startFilterPath == currentPath {
+				newEnvValue := &envValue{
+					StrValue: currentEnvValue.StrValue,
+					Path:     currentEnvValue.Path[len(startFilter):],
+				}
+				res = append(res, newEnvValue)
+			}
+		}
+	}
 	return res
 }

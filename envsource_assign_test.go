@@ -211,11 +211,31 @@ func TestAssignValues(t *testing.T) {
 				},
 			},
 		},
+		{
+			"WithMapofStringToStruct",
+			&struct {
+				Config map[string]basicAppConfig
+			}{},
+			[]*envValue{
+				&envValue{"FOOO", path{"Config", "foo", "StringValue"}},
+				&envValue{"10", path{"Config", "foo", "IntValue"}},
+			},
+			&struct {
+				Config map[string]basicAppConfig
+			}{
+				Config: map[string]basicAppConfig{
+					"foo": basicAppConfig{
+						StringValue: "FOOO",
+						IntValue:    10,
+					},
+				},
+			},
+		},
 	}
 
 	for _, testCase := range testCases {
 		t.Run(testCase.Label, func(t *testing.T) {
-			err := subject.assignValues(reflect.ValueOf(testCase.Value).Elem(), testCase.Values)
+			err := subject.assignValues(reflect.ValueOf(testCase.Value).Elem(), testCase.Values, []string{})
 			if err != nil {
 				t.Logf("Expected no error, got %s", err.Error())
 				t.Fail()
@@ -224,4 +244,56 @@ func TestAssignValues(t *testing.T) {
 			assert.Exactly(t, testCase.Expectation, testCase.Value)
 		})
 	}
+}
+
+func TestFilterEnvVarWithPrefix(t *testing.T) {
+	envSource := []*envValue{
+		&envValue{"FOOO", path{"Config", "0", "foo", "StringValue"}},
+		&envValue{"10", path{"Config", "0", "foo", "IntValue"}},
+		&envValue{"10", path{"Config", "IntValue"}},
+		&envValue{"10", path{"Config", "0", "0", "IntValue"}},
+	}
+
+	result := filterEnvVarWithPrefix(envSource, []string{"Config", "0", "foo"})
+
+	expected := []*envValue{
+		&envValue{"FOOO", path{"StringValue"}},
+		&envValue{"10", path{"IntValue"}},
+	}
+	assert.Exactly(t, expected, result)
+}
+
+func TestReflect(t *testing.T) {
+	config := &struct {
+		Config map[string]basicAppConfig
+	}{
+		Config: map[string]basicAppConfig{
+			"foo": basicAppConfig{
+				StringValue: "FOO",
+				IntValue:    10,
+			},
+		},
+	}
+	mapVal := reflect.ValueOf(config.Config)
+	mapType := mapVal.Type()
+	elemType := mapType.Elem()
+
+	assert.Equal(t, reflect.Struct, elemType.Kind())
+	elemVal := reflect.New(elemType)
+	assert.NotNil(t, elemVal)
+
+	parsers, _ := parse.LoadParsers(nil)
+	subject := &envSource{
+		"",
+		"_",
+		parsers,
+	}
+	elemVal.Elem().FieldByName("StringValue").Set(reflect.ValueOf("hello!"))
+	elem := elemVal.Elem()
+	subject.assignMap(mapVal, "key", elem)
+
+	res := config.Config["key"]
+
+	assert.NotNil(t, res)
+	assert.Equal(t, "hello!", res.StringValue)
 }
