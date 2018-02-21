@@ -231,6 +231,41 @@ func TestAssignValues(t *testing.T) {
 				},
 			},
 		},
+		{
+			"WithMapofIntToStruct",
+			&struct {
+				Config map[int]basicAppConfig
+			}{},
+			[]*envValue{
+				&envValue{"FOOO", path{"Config", "0", "StringValue"}},
+				&envValue{"10", path{"Config", "0", "IntValue"}},
+			},
+			&struct {
+				Config map[int]basicAppConfig
+			}{
+				Config: map[int]basicAppConfig{
+					0: basicAppConfig{
+						StringValue: "FOOO",
+						IntValue:    10,
+					},
+				},
+			},
+		},
+		{
+			"WithArrayofString",
+			&struct {
+				Config []int
+			}{},
+			[]*envValue{
+				&envValue{"1", path{"Config", "0"}},
+				&envValue{"10", path{"Config", "1"}},
+			},
+			&struct {
+				Config []int
+			}{
+				Config: []int{1, 10},
+			},
+		},
 	}
 
 	for _, testCase := range testCases {
