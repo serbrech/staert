@@ -252,7 +252,7 @@ func TestAssignValues(t *testing.T) {
 			},
 		},
 		{
-			"WithArrayofString",
+			"WithArrayofInts",
 			&struct {
 				Config []int
 			}{},
@@ -264,6 +264,36 @@ func TestAssignValues(t *testing.T) {
 				Config []int
 			}{
 				Config: []int{1, 10},
+			},
+		},
+		{
+			"WithArrayofStructs",
+			&struct {
+				Config []basicAppConfig
+			}{},
+			[]*envValue{
+				&envValue{"Test", path{"Config", "0", "StringValue"}},
+				&envValue{"10", path{"Config", "0", "IntValue"}},
+				&envValue{"true", path{"Config", "0", "BoolValue"}},
+				&envValue{"Test2", path{"Config", "1", "StringValue"}},
+				&envValue{"20", path{"Config", "1", "IntValue"}},
+				&envValue{"false", path{"Config", "1", "BoolValue"}},
+			},
+			&struct {
+				Config []basicAppConfig
+			}{
+				Config: []basicAppConfig{
+					{
+						BoolValue:   true,
+						IntValue:    10,
+						StringValue: "Test",
+					},
+					{
+						BoolValue:   false,
+						IntValue:    20,
+						StringValue: "Test2",
+					},
+				},
 			},
 		},
 	}

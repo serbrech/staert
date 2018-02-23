@@ -233,7 +233,7 @@ func (e *envSource) assignValues(configVal reflect.Value, envValues []*envValue,
 			break
 		case reflect.Array:
 		case reflect.Slice:
-			e.assignArrays(fieldVal, v)
+			e.assignArrays(fieldVal, envValues, v)
 			break
 		case reflect.Map:
 			key := v.Path[1]
@@ -248,6 +248,7 @@ func (e *envSource) assignValues(configVal reflect.Value, envValues []*envValue,
 				e.assignMap(fieldVal, key, reflect.ValueOf(val))
 			}
 			break
+
 		default:
 			if parser, ok := e.parsers[fieldVal.Type()]; ok {
 				parser.Set(v.StrValue)
@@ -282,8 +283,7 @@ func (e *envSource) assignMap(fieldVal reflect.Value, key string, val reflect.Va
 	}
 }
 
-func (e *envSource) assignArrays(fieldVal reflect.Value, envValue *envValue) {
-	//key := envValue.Path[1]
+func (e *envSource) assignArrays(fieldVal reflect.Value, envValues []*envValue, currentEnvValue *envValue) {
 	arrayType := fieldVal.Type()
 	slice := reflect.Zero(reflect.SliceOf(arrayType.Elem()))
 	if !fieldVal.IsNil() {
@@ -291,17 +291,23 @@ func (e *envSource) assignArrays(fieldVal reflect.Value, envValue *envValue) {
 		fieldVal.Set(slice)
 	}
 	elemType := arrayType.Elem()
-	println("elemType is : %#s", elemType.String())
-	// parsedKey, errK := strconv.Atoi(key)
-	// if errK != nil {
-	// 	//TODO err
-	// }
 	if elemType.Kind() != reflect.Struct {
-		parsedVal, _ := e.getParsedValue(elemType, envValue.StrValue)
+		parsedVal, _ := e.getParsedValue(elemType, currentEnvValue.StrValue)
 		slice = reflect.Append(slice, reflect.ValueOf(parsedVal))
 		fieldVal.Set(slice)
 	} else {
-		//
+		if index, err := strconv.Atoi(currentEnvValue.Path[1]); err == nil {
+			//grow the slice if needed
+			if slice.Len() <= index {
+				newSlice := reflect.MakeSlice(slice.Type(), index+1, index+1)
+				reflect.Copy(newSlice, slice)
+				slice = newSlice
+			}
+			//get item at env value specified index.
+			existingValue := slice.Index(index)
+			e.assignValues(existingValue, envValues, currentEnvValue.Path[:2])
+			fieldVal.Set(slice)
+		}
 	}
 }
 
