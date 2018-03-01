@@ -291,7 +291,9 @@ func (e *envSource) assignArrays(fieldVal reflect.Value, envValues []*envValue, 
 		fieldVal.Set(slice)
 	}
 	elemType := arrayType.Elem()
-	if elemType.Kind() != reflect.Struct {
+
+	if elemType.Kind() != reflect.Struct && elemType.Kind() != reflect.Ptr {
+		fmt.Printf("slice elemkind %s\n", elemType.Kind())
 		parsedVal, _ := e.getParsedValue(elemType, currentEnvValue.StrValue)
 		slice = reflect.Append(slice, reflect.ValueOf(parsedVal))
 		fieldVal.Set(slice)

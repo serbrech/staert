@@ -296,6 +296,36 @@ func TestAssignValues(t *testing.T) {
 				},
 			},
 		},
+		{
+			"WithArrayofPointerToStructs",
+			&struct {
+				Config []*basicAppConfig
+			}{},
+			[]*envValue{
+				&envValue{"Test", path{"Config", "0", "StringValue"}},
+				&envValue{"10", path{"Config", "0", "IntValue"}},
+				&envValue{"true", path{"Config", "0", "BoolValue"}},
+				&envValue{"Test2", path{"Config", "1", "StringValue"}},
+				&envValue{"20", path{"Config", "1", "IntValue"}},
+				&envValue{"false", path{"Config", "1", "BoolValue"}},
+			},
+			&struct {
+				Config []*basicAppConfig
+			}{
+				Config: []*basicAppConfig{
+					{
+						BoolValue:   true,
+						IntValue:    10,
+						StringValue: "Test",
+					},
+					{
+						BoolValue:   false,
+						IntValue:    20,
+						StringValue: "Test2",
+					},
+				},
+			},
+		},
 	}
 
 	for _, testCase := range testCases {
