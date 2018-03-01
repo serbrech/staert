@@ -127,7 +127,9 @@ func (e *envSource) analyzeValue(valType reflect.Type, fieldPath path) ([]*envVa
 	case reflect.Struct:
 		res, err = e.analyzeStruct(valType, fieldPath)
 	case reflect.Invalid, reflect.Chan, reflect.Func, reflect.Interface, reflect.UnsafePointer:
-		err = fmt.Errorf("type %s is not supported by EnvSource. fieldPath : %v", valType.Name(), fieldPath)
+		//Skip these fields, don't throw...
+		//TODO : keep track of the fields ignored by the library to be able to list them.
+		//err = fmt.Errorf("type %s is not supported by EnvSource. fieldPath : %v", valType.Name(), fieldPath)
 	default:
 		res = e.loadValue(fieldPath)
 	}

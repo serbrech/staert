@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"sort"
 	"testing"
+	"time"
 
 	"github.com/containous/flaeg/parse"
 )
@@ -531,6 +532,23 @@ func TestAnalyzeStruct(t *testing.T) {
 				"CONFIG_0_FOO_INT_VALUE":    "10",
 				"CONFIG_1_BAR_STRING_VALUE": "MIMI",
 				"CONFIG_1_BAR_INT_VALUE":    "15",
+			},
+			testAnalyzeStructShouldSucceed,
+		},
+		{
+			"WithAFunc",
+			&struct {
+				Config basicAppConfig
+				Time   func() time.Time
+			}{}, []*envValue{
+				&envValue{"FOOO", path{"Config", "StringValue"}},
+				&envValue{"10", path{"Config", "IntValue"}},
+				&envValue{"true", path{"Config", "BoolValue"}},
+			},
+			map[string]string{
+				"CONFIG_STRING_VALUE": "FOOO",
+				"CONFIG_INT_VALUE":    "10",
+				"CONFIG_BOOL_VALUE":   "true",
 			},
 			testAnalyzeStructShouldSucceed,
 		},
