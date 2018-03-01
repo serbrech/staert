@@ -552,6 +552,23 @@ func TestAnalyzeStruct(t *testing.T) {
 			},
 			testAnalyzeStructShouldSucceed,
 		},
+		{
+			"WithAWebBasicAuth",
+			&struct {
+				Basic     *Basic
+				UsersFile string
+			}{}, []*envValue{
+				&envValue{"UserZero", path{"Basic", "0"}},
+				&envValue{"UserOne", path{"Basic", "1"}},
+				&envValue{"path/to/file", path{"UsersFile"}},
+			},
+			map[string]string{
+				"BASIC_0":    "UserZero",
+				"BASIC_1":    "UserOne",
+				"USERS_FILE": "path/to/file",
+			},
+			testAnalyzeStructShouldSucceed,
+		},
 	}
 
 	for _, testCase := range testCases {

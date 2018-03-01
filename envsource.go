@@ -85,7 +85,7 @@ func (e *envSource) analyzeStruct(configType reflect.Type, currentPath path) ([]
 		}
 		// If we're facing an embedded struct
 		if field.Anonymous {
-			values, err := e.analyzeStruct(field.Type, currentPath)
+			values, err := e.analyzeValue(field.Type, currentPath)
 
 			if err != nil {
 				return []*envValue{}, err
