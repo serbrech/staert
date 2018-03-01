@@ -79,7 +79,7 @@ func (e *envSource) analyzeStruct(configType reflect.Type, currentPath path) ([]
 		field := configType.Field(i)
 
 		//TODO: Handle this case;
-		//find the find the underlying struct and process it.
+		//find the underlying struct and process it.
 		if field.Type.Kind() == reflect.Interface {
 			continue //skip fields of kind interface
 		}
@@ -127,8 +127,7 @@ func (e *envSource) analyzeValue(valType reflect.Type, fieldPath path) ([]*envVa
 	case reflect.Struct:
 		res, err = e.analyzeStruct(valType, fieldPath)
 	case reflect.Invalid, reflect.Chan, reflect.Func, reflect.Interface, reflect.UnsafePointer:
-		err = fmt.Errorf("type %s is not supported by EnvSource", valType.Name())
-
+		err = fmt.Errorf("type %s is not supported by EnvSource. fieldPath : %v", valType.Name(), fieldPath)
 	default:
 		res = e.loadValue(fieldPath)
 	}
@@ -214,7 +213,7 @@ func (e *envSource) assignValues(configVal reflect.Value, envValues []*envValue,
 	for _, v := range envValues {
 		fieldVal := configVal.FieldByName(v.Path[0])
 		if !fieldVal.IsValid() {
-			//skip field that are found
+			//skip field that are found invalid
 			continue
 		}
 		switch fieldVal.Kind() {
@@ -233,7 +232,10 @@ func (e *envSource) assignValues(configVal reflect.Value, envValues []*envValue,
 			break
 		case reflect.Array:
 		case reflect.Slice:
-			e.assignArrays(fieldVal, envValues, v)
+			err := e.assignArrays(fieldVal, envValues, v)
+			if err != nil {
+				return err
+			}
 			break
 		case reflect.Map:
 			key := v.Path[1]
@@ -243,9 +245,15 @@ func (e *envSource) assignValues(configVal reflect.Value, envValues []*envValue,
 			if elemType.Kind() == reflect.Struct {
 				elem := reflect.New(elemType).Elem()
 				e.assignValues(elem, envValues, v.Path[:2])
-				e.assignMap(fieldVal, key, elem)
+				err := e.assignMap(fieldVal, key, elem)
+				if err != nil {
+					return err
+				}
 			} else {
-				e.assignMap(fieldVal, key, reflect.ValueOf(val))
+				err := e.assignMap(fieldVal, key, reflect.ValueOf(val))
+				if err != nil {
+					return err
+				}
 			}
 			break
 
@@ -263,27 +271,36 @@ func (e *envSource) assignValues(configVal reflect.Value, envValues []*envValue,
 	return nil
 }
 
-func (e *envSource) assignMap(fieldVal reflect.Value, key string, val reflect.Value) {
-
+func (e *envSource) assignMap(fieldVal reflect.Value, key string, val reflect.Value) error {
+	var (
+		err error
+	)
 	mapType := fieldVal.Type()
 	if fieldVal.IsNil() {
 		fieldVal.Set(reflect.MakeMap(mapType))
 	}
 	elemType := mapType.Elem()
 	keyType := mapType.Key()
-	parsedKey, errKey := e.getParsedValue(keyType, key)
-	if errKey != nil {
-		//fail
+	parsedKey, err := e.getParsedValue(keyType, key)
+	if err != nil {
+		return err
 	}
 	if val.Kind() == reflect.String {
-		parsedVal, _ := e.getParsedValue(elemType, val.String())
+		parsedVal, err := e.getParsedValue(elemType, val.String())
+		if err != nil {
+			return err
+		}
 		fieldVal.SetMapIndex(reflect.ValueOf(parsedKey), reflect.ValueOf(parsedVal))
 	} else {
 		fieldVal.SetMapIndex(reflect.ValueOf(parsedKey), val)
 	}
+	return err
 }
 
-func (e *envSource) assignArrays(fieldVal reflect.Value, envValues []*envValue, currentEnvValue *envValue) {
+func (e *envSource) assignArrays(fieldVal reflect.Value, envValues []*envValue, currentEnvValue *envValue) error {
+	var (
+		err error
+	)
 	arrayType := fieldVal.Type()
 	slice := reflect.Zero(reflect.SliceOf(arrayType.Elem()))
 	if !fieldVal.IsNil() {
@@ -294,7 +311,10 @@ func (e *envSource) assignArrays(fieldVal reflect.Value, envValues []*envValue, 
 
 	if elemType.Kind() != reflect.Struct && elemType.Kind() != reflect.Ptr {
 		fmt.Printf("slice elemkind %s\n", elemType.Kind())
-		parsedVal, _ := e.getParsedValue(elemType, currentEnvValue.StrValue)
+		parsedVal, err := e.getParsedValue(elemType, currentEnvValue.StrValue)
+		if err != nil {
+			return err
+		}
 		slice = reflect.Append(slice, reflect.ValueOf(parsedVal))
 		fieldVal.Set(slice)
 	} else {
@@ -311,6 +331,7 @@ func (e *envSource) assignArrays(fieldVal reflect.Value, envValues []*envValue, 
 			fieldVal.Set(slice)
 		}
 	}
+	return err
 }
 
 func (e *envSource) getParsedValue(valType reflect.Type, stringValue string) (interface{}, error) {
@@ -321,7 +342,6 @@ func (e *envSource) getParsedValue(valType reflect.Type, stringValue string) (in
 		}
 		return parser.Get(), nil
 	}
-	//ERROR or WARNING AT LEAST, we could not parse the value, it should not be silenced.
 	return nil, fmt.Errorf("could not parse %s", stringValue)
 }
 

@@ -627,24 +627,27 @@ func TestWithArray(t *testing.T) {
 	}
 
 	setupEnv(testCase.Env)
-	subject := &envSource{"", "_", map[reflect.Type]parse.Parser{}}
+	parsers, _ := parse.LoadParsers(nil)
+	subject := &envSource{"", "_", parsers}
 	res, err := subject.analyzeStruct(
 		reflect.TypeOf(testCase.Source).Elem(),
 		path{},
 	)
 	testCase.Then(t, testCase.Expectation, res, err)
-	configVal := reflect.Indirect(reflect.ValueOf(config))
-	subject.assignValues(configVal, res, []string{})
-
+	subject.assignValues(reflect.ValueOf(&config), res, []string{})
+	if config.StringArray[0] != "one" || config.StringArray[1] != "two" {
+		t.Logf("Expected [[one two]] got [%v]\n", config.StringArray)
+		t.FailNow()
+	}
 	cleanupEnv(testCase.Env)
 }
 
 func TestWithSliceToValue(t *testing.T) {
-	config := &struct {
+	config := struct {
 		Config []int
 	}{}
 	testCase := testcase{
-		config,
+		&config,
 		[]*envValue{
 			&envValue{"FOOO", path{"Config", "0"}},
 			&envValue{"10", path{"Config", "1"}},
@@ -659,13 +662,14 @@ func TestWithSliceToValue(t *testing.T) {
 	}
 
 	setupEnv(testCase.Env)
-	subject := &envSource{"", "_", map[reflect.Type]parse.Parser{}}
+	parsers, _ := parse.LoadParsers(nil)
+	subject := &envSource{"", "_", parsers}
 	res, err := subject.analyzeStruct(
 		reflect.TypeOf(testCase.Source).Elem(),
 		path{},
 	)
 	testCase.Then(t, testCase.Expectation, res, err)
-	configVal := reflect.ValueOf(config).Elem()
+	configVal := reflect.ValueOf(&config)
 	subject.assignValues(configVal, res, []string{})
 
 	cleanupEnv(testCase.Env)
