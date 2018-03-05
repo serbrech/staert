@@ -40,53 +40,53 @@ func TestAssignValues(t *testing.T) {
 
 	testCases := []struct {
 		Label       string
-		Value       interface{}
+		Source      interface{}
 		Values      []*envValue
 		Expectation interface{}
 	}{
 		{
-			"BasicStruct",
-			&struct {
+			Label: "BasicStruct",
+			Source: &struct {
 				StringValue      string
 				OtherStringValue string
 			}{},
-			[]*envValue{
+			Values: []*envValue{
 				{"FOO", path{"StringValue"}},
 				{"BAR", path{"OtherStringValue"}},
 			},
-			&struct {
+			Expectation: &struct {
 				StringValue      string
 				OtherStringValue string
 			}{"FOO", "BAR"},
 		},
 		{
-			"BasicStructWithParser",
-			&struct {
+			Label: "BasicStructWithParser",
+			Source: &struct {
 				StringValue string
 				IntValue    int
 			}{},
-			[]*envValue{
+			Values: []*envValue{
 				{"FOO", path{"StringValue"}},
 				{"1", path{"IntValue"}},
 			},
-			&struct {
+			Expectation: &struct {
 				StringValue string
 				IntValue    int
 			}{"FOO", 1},
 		},
 		{
-			"BasicStructEmbedded",
-			&struct {
+			Label: "BasicStructEmbedded",
+			Source: &struct {
 				StringValue string
 				Next        basicAppConfig
 			}{},
-			[]*envValue{
+			Values: []*envValue{
 				{"FOO", path{"StringValue"}},
 				{"1", path{"Next", "IntValue"}},
 				{"true", path{"Next", "BoolValue"}},
 				{"string", path{"Next", "StringValue"}},
 			},
-			&struct {
+			Expectation: &struct {
 				StringValue string
 				Next        basicAppConfig
 			}{"FOO", basicAppConfig{
@@ -96,18 +96,18 @@ func TestAssignValues(t *testing.T) {
 			}},
 		},
 		{
-			"BasicStructPointer",
-			&struct {
+			Label: "BasicStructPointer",
+			Source: &struct {
 				StringValue string
 				NextPointer *basicAppConfig
 			}{},
-			[]*envValue{
+			Values: []*envValue{
 				{"FOO", path{"StringValue"}},
 				{"1", path{"NextPointer", "IntValue"}},
 				{"true", path{"NextPointer", "BoolValue"}},
 				{"string", path{"NextPointer", "StringValue"}},
 			},
-			&struct {
+			Expectation: &struct {
 				StringValue string
 				NextPointer *basicAppConfig
 			}{"FOO", &basicAppConfig{
@@ -117,50 +117,50 @@ func TestAssignValues(t *testing.T) {
 			}},
 		},
 		{
-			"BasicStructPointerPointer",
-			&struct {
+			Label: "BasicStructPointerPointer",
+			Source: &struct {
 				StringValue string
 				NextPointer **basicAppConfig
 			}{},
-			[]*envValue{
+			Values: []*envValue{
 				{"FOO", path{"StringValue"}},
 				{"1", path{"NextPointer", "IntValue"}},
 				{"true", path{"NextPointer", "BoolValue"}},
 				{"string", path{"NextPointer", "StringValue"}},
 			},
-			expectedPtrPtr,
+			Expectation: expectedPtrPtr,
 		},
 		{
-			"WithWrongPath",
-			&delegatorType{},
-			[]*envValue{
+			Label:  "WithWrongPath",
+			Source: &delegatorType{},
+			Values: []*envValue{
 				{"FOO", path{"WrongPath"}},
 			},
-			&delegatorType{},
+			Expectation: &delegatorType{},
 		},
 		{
-			"WithInterfaceDelegation",
-			&delegatorType{},
-			[]*envValue{
+			Label:  "WithInterfaceDelegation",
+			Source: &delegatorType{},
+			Values: []*envValue{
 				{"FOO", path{"StringValue"}},
 				{"1", path{"IntValue"}},
 			},
-			&delegatorType{
+			Expectation: &delegatorType{
 				IntValue:    1,
 				StringValue: "FOO",
 			},
 		},
 		{
-			"WithMapOfStringValues",
-			&struct {
+			Label: "WithMapOfStringValues",
+			Source: &struct {
 				Config map[string]string
 			}{},
-			[]*envValue{
+			Values: []*envValue{
 				{"FOO", path{"Config", "foo"}},
 				{"MEH", path{"Config", "bar"}},
 				{"BAR", path{"Config", "biz"}},
 			},
-			&struct {
+			Expectation: &struct {
 				Config map[string]string
 			}{
 				Config: map[string]string{
@@ -171,16 +171,16 @@ func TestAssignValues(t *testing.T) {
 			},
 		},
 		{
-			"CanParseMapValues",
-			&struct {
+			Label: "CanParseMapValues",
+			Source: &struct {
 				Config map[string]int
 			}{},
-			[]*envValue{
+			Values: []*envValue{
 				{"1", path{"Config", "foo"}},
 				{"2", path{"Config", "bar"}},
 				{"3", path{"Config", "biz"}},
 			},
-			&struct {
+			Expectation: &struct {
 				Config map[string]int
 			}{
 				Config: map[string]int{
@@ -191,16 +191,16 @@ func TestAssignValues(t *testing.T) {
 			},
 		},
 		{
-			"CanParseMapValuesAndKeys",
-			&struct {
+			Label: "CanParseMapValuesAndKeys",
+			Source: &struct {
 				Config map[int]int
 			}{},
-			[]*envValue{
+			Values: []*envValue{
 				{"1", path{"Config", "1"}},
 				{"2", path{"Config", "2"}},
 				{"3", path{"Config", "3"}},
 			},
-			&struct {
+			Expectation: &struct {
 				Config map[int]int
 			}{
 				Config: map[int]int{
@@ -211,15 +211,15 @@ func TestAssignValues(t *testing.T) {
 			},
 		},
 		{
-			"WithMapofStringToStruct",
-			&struct {
+			Label: "WithMapofStringToStruct",
+			Source: &struct {
 				Config map[string]basicAppConfig
 			}{},
-			[]*envValue{
+			Values: []*envValue{
 				{"FOOO", path{"Config", "foo", "StringValue"}},
 				{"10", path{"Config", "foo", "IntValue"}},
 			},
-			&struct {
+			Expectation: &struct {
 				Config map[string]basicAppConfig
 			}{
 				Config: map[string]basicAppConfig{
@@ -231,15 +231,15 @@ func TestAssignValues(t *testing.T) {
 			},
 		},
 		{
-			"WithMapofIntToStruct",
-			&struct {
+			Label: "WithMapofIntToStruct",
+			Source: &struct {
 				Config map[int]basicAppConfig
 			}{},
-			[]*envValue{
+			Values: []*envValue{
 				{"FOOO", path{"Config", "0", "StringValue"}},
 				{"10", path{"Config", "0", "IntValue"}},
 			},
-			&struct {
+			Expectation: &struct {
 				Config map[int]basicAppConfig
 			}{
 				Config: map[int]basicAppConfig{
@@ -251,26 +251,26 @@ func TestAssignValues(t *testing.T) {
 			},
 		},
 		{
-			"WithArrayofInts",
-			&struct {
+			Label: "WithArrayofInts",
+			Source: &struct {
 				Config []int
 			}{},
-			[]*envValue{
+			Values: []*envValue{
 				{"1", path{"Config", "0"}},
 				{"10", path{"Config", "1"}},
 			},
-			&struct {
+			Expectation: &struct {
 				Config []int
 			}{
 				Config: []int{1, 10},
 			},
 		},
 		{
-			"WithArrayofStructs",
-			&struct {
+			Label: "WithArrayofStructs",
+			Source: &struct {
 				Config []basicAppConfig
 			}{},
-			[]*envValue{
+			Values: []*envValue{
 				{"Test", path{"Config", "0", "StringValue"}},
 				{"10", path{"Config", "0", "IntValue"}},
 				{"true", path{"Config", "0", "BoolValue"}},
@@ -278,7 +278,7 @@ func TestAssignValues(t *testing.T) {
 				{"20", path{"Config", "1", "IntValue"}},
 				{"false", path{"Config", "1", "BoolValue"}},
 			},
-			&struct {
+			Expectation: &struct {
 				Config []basicAppConfig
 			}{
 				Config: []basicAppConfig{
@@ -296,11 +296,11 @@ func TestAssignValues(t *testing.T) {
 			},
 		},
 		{
-			"WithArrayofPointerToStructs",
-			&struct {
+			Label: "WithArrayofPointerToStructs",
+			Source: &struct {
 				Config []*basicAppConfig
 			}{},
-			[]*envValue{
+			Values: []*envValue{
 				{"Test", path{"Config", "0", "StringValue"}},
 				{"10", path{"Config", "0", "IntValue"}},
 				{"true", path{"Config", "0", "BoolValue"}},
@@ -308,7 +308,7 @@ func TestAssignValues(t *testing.T) {
 				{"20", path{"Config", "1", "IntValue"}},
 				{"false", path{"Config", "1", "BoolValue"}},
 			},
-			&struct {
+			Expectation: &struct {
 				Config []*basicAppConfig
 			}{
 				Config: []*basicAppConfig{
@@ -329,13 +329,13 @@ func TestAssignValues(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.Label, func(t *testing.T) {
-			err := subject.assignValues(reflect.ValueOf(testCase.Value).Elem(), testCase.Values, []string{})
+			err := subject.assignValues(reflect.ValueOf(testCase.Source).Elem(), testCase.Values, []string{})
 			if err != nil {
 				t.Logf("Expected no error, got %s", err.Error())
 				t.Fail()
 			}
 
-			assert.Exactly(t, testCase.Expectation, testCase.Value)
+			assert.Exactly(t, testCase.Expectation, testCase.Source)
 		})
 	}
 }

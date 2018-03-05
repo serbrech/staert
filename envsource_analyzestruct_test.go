@@ -109,465 +109,465 @@ func TestAnalyzeStruct(t *testing.T) {
 		Then        testAnalyzeStructThenHook
 	}{
 		{
-			"WithBasicConfiguration",
-			&basicAppConfig{},
-			[]*envValue{
+			Label:  "WithBasicConfiguration",
+			Source: &basicAppConfig{},
+			Expectation: []*envValue{
 				{"FOOO", path{"StringValue"}},
 				{"10", path{"IntValue"}},
 				{"true", path{"BoolValue"}},
 			},
-			map[string]string{
+			Env: map[string]string{
 				"STRING_VALUE": "FOOO",
 				"INT_VALUE":    "10",
 				"BOOL_VALUE":   "true",
 			},
-			testAnalyzeStructShouldSucceed,
+			Then: testAnalyzeStructShouldSucceed,
 		},
 		{
-			"WithUnexportedFields",
-			&struct {
+			Label: "WithUnexportedFields",
+			Source: &struct {
 				unexported string
 				IntValue   int
 			}{},
-			[]*envValue{
+			Expectation: []*envValue{
 				{"10", path{"IntValue"}},
 			},
-			map[string]string{
+			Env: map[string]string{
 				"UNEXPORTED": "FOOO",
 				"INT_VALUE":  "10",
 			},
-			testAnalyzeStructShouldSucceed,
+			Then: testAnalyzeStructShouldSucceed,
 		},
 		{
-			"WithEmbeddedStruct",
-			&struct {
+			Label: "WithEmbeddedStruct",
+			Source: &struct {
 				basicAppConfig
 				FloatValue float32
 			}{},
-			[]*envValue{
+			Expectation: []*envValue{
 				{"FOOO", path{"StringValue"}},
 				{"10", path{"IntValue"}},
 				{"true", path{"BoolValue"}},
 				{"42.1", path{"FloatValue"}},
 			},
-			map[string]string{
+			Env: map[string]string{
 				"STRING_VALUE": "FOOO",
 				"INT_VALUE":    "10",
 				"BOOL_VALUE":   "true",
 				"FLOAT_VALUE":  "42.1",
 			},
-			testAnalyzeStructShouldSucceed,
+			Then: testAnalyzeStructShouldSucceed,
 		},
 		{
-			"WithNestedStructValue",
-			&struct {
+			Label: "WithNestedStructValue",
+			Source: &struct {
 				Config basicAppConfig
 			}{},
-			[]*envValue{
+			Expectation: []*envValue{
 				{"FOOO", path{"Config", "StringValue"}},
 				{"10", path{"Config", "IntValue"}},
 				{"true", path{"Config", "BoolValue"}},
 			},
-			map[string]string{
+			Env: map[string]string{
 				"CONFIG_STRING_VALUE": "FOOO",
 				"CONFIG_INT_VALUE":    "10",
 				"CONFIG_BOOL_VALUE":   "true",
 			},
-			testAnalyzeStructShouldSucceed,
+			Then: testAnalyzeStructShouldSucceed,
 		},
 		{
-			"WithDoubleNestedStructValue",
-			&struct {
+			Label: "WithDoubleNestedStructValue",
+			Source: &struct {
 				Nested struct {
 					Config basicAppConfig
 				}
 			}{},
-			[]*envValue{
+			Expectation: []*envValue{
 				{"FOOO", path{"Nested", "Config", "StringValue"}},
 				{"10", path{"Nested", "Config", "IntValue"}},
 				{"true", path{"Nested", "Config", "BoolValue"}},
 			},
-			map[string]string{
+			Env: map[string]string{
 				"NESTED_CONFIG_STRING_VALUE": "FOOO",
 				"NESTED_CONFIG_INT_VALUE":    "10",
 				"NESTED_CONFIG_BOOL_VALUE":   "true",
 			},
-			testAnalyzeStructShouldSucceed,
+			Then: testAnalyzeStructShouldSucceed,
 		},
 		{
-			"WithNestedStructPtr",
-			&struct {
+			Label: "WithNestedStructPtr",
+			Source: &struct {
 				Config *basicAppConfig
 			}{},
-			[]*envValue{
+			Expectation: []*envValue{
 				{"FOOO", path{"Config", "StringValue"}},
 				{"10", path{"Config", "IntValue"}},
 				{"true", path{"Config", "BoolValue"}},
 			},
-			map[string]string{
+			Env: map[string]string{
 				"CONFIG_STRING_VALUE": "FOOO",
 				"CONFIG_INT_VALUE":    "10",
 				"CONFIG_BOOL_VALUE":   "true",
 			},
-			testAnalyzeStructShouldSucceed,
+			Then: testAnalyzeStructShouldSucceed,
 		},
 		{
-			"WithDoubleNestedStructPtr",
-			&struct {
+			Label: "WithDoubleNestedStructPtr",
+			Source: &struct {
 				Nested *struct {
 					Config *basicAppConfig
 				}
 			}{},
-			[]*envValue{
+			Expectation: []*envValue{
 				{"FOOO", path{"Nested", "Config", "StringValue"}},
 				{"10", path{"Nested", "Config", "IntValue"}},
 				{"true", path{"Nested", "Config", "BoolValue"}},
 			},
-			map[string]string{
+			Env: map[string]string{
 				"NESTED_CONFIG_STRING_VALUE": "FOOO",
 				"NESTED_CONFIG_INT_VALUE":    "10",
 				"NESTED_CONFIG_BOOL_VALUE":   "true",
 			},
-			testAnalyzeStructShouldSucceed,
+			Then: testAnalyzeStructShouldSucceed,
 		},
 		{
-			"WithDoubleNestedStructMixed",
-			&struct {
+			Label: "WithDoubleNestedStructMixed",
+			Source: &struct {
 				Nested *struct {
 					Config basicAppConfig
 				}
 			}{},
-			[]*envValue{
+			Expectation: []*envValue{
 				{"FOOO", path{"Nested", "Config", "StringValue"}},
 				{"10", path{"Nested", "Config", "IntValue"}},
 				{"true", path{"Nested", "Config", "BoolValue"}},
 			},
-			map[string]string{
+			Env: map[string]string{
 				"NESTED_CONFIG_STRING_VALUE": "FOOO",
 				"NESTED_CONFIG_INT_VALUE":    "10",
 				"NESTED_CONFIG_BOOL_VALUE":   "true",
 			},
-			testAnalyzeStructShouldSucceed,
+			Then: testAnalyzeStructShouldSucceed,
 		},
 		{
-			"WithPtrValue",
-			&struct {
+			Label: "WithPtrValue",
+			Source: &struct {
 				IntValue *int
 			}{},
-			[]*envValue{
+			Expectation: []*envValue{
 				{"10", path{"IntValue"}},
 			},
-			map[string]string{
+			Env: map[string]string{
 				"INT_VALUE": "10",
 			},
-			testAnalyzeStructShouldSucceed,
+			Then: testAnalyzeStructShouldSucceed,
 		},
 		{
-			"WithNestedPtrValue",
-			&struct {
+			Label: "WithNestedPtrValue",
+			Source: &struct {
 				Config struct {
 					IntValue *int
 				}
 			}{},
-			[]*envValue{
+			Expectation: []*envValue{
 				{"10", path{"Config", "IntValue"}},
 			},
-			map[string]string{
+			Env: map[string]string{
 				"CONFIG_INT_VALUE": "10",
 			},
-			testAnalyzeStructShouldSucceed,
+			Then: testAnalyzeStructShouldSucceed,
 		},
 		{
-			"WithNestedPtrValue",
-			&struct {
+			Label: "WithNestedPtrValue",
+			Source: &struct {
 				Config struct {
 					IntValue *int
 				}
 			}{},
-			[]*envValue{
+			Expectation: []*envValue{
 				{"10", path{"Config", "IntValue"}},
 			},
-			map[string]string{
+			Env: map[string]string{
 				"CONFIG_INT_VALUE": "10",
 			},
-			testAnalyzeStructShouldSucceed,
+			Then: testAnalyzeStructShouldSucceed,
 		},
 		{
-			"WithPtrPtrToValue",
-			&struct {
+			Label: "WithPtrPtrToValue",
+			Source: &struct {
 				Config **int
 			}{},
-			[]*envValue{
+			Expectation: []*envValue{
 				{"10", path{"Config"}},
 			},
-			map[string]string{
+			Env: map[string]string{
 				"CONFIG": "10",
 			},
-			testAnalyzeStructShouldSucceed,
+			Then: testAnalyzeStructShouldSucceed,
 		},
 		{
-			"WithPtrPtrToStruct",
-			&struct {
+			Label: "WithPtrPtrToStruct",
+			Source: &struct {
 				Config **basicAppConfig
 			}{},
-			[]*envValue{
+			Expectation: []*envValue{
 				{"FOOO", path{"Config", "StringValue"}},
 				{"10", path{"Config", "IntValue"}},
 				{"true", path{"Config", "BoolValue"}},
 			},
-			map[string]string{
+			Env: map[string]string{
 				"CONFIG_STRING_VALUE": "FOOO",
 				"CONFIG_INT_VALUE":    "10",
 				"CONFIG_BOOL_VALUE":   "true",
 			},
-			testAnalyzeStructShouldSucceed,
+			Then: testAnalyzeStructShouldSucceed,
 		},
 		{
-			"WithInterfaceDelegation",
-			&delegatorType{},
-			[]*envValue{
+			Label:  "WithInterfaceDelegation",
+			Source: &delegatorType{},
+			Expectation: []*envValue{
 				{"FOOO", path{"StringValue"}},
 				{"10", path{"IntValue"}},
 			},
-			map[string]string{
+			Env: map[string]string{
 				"STRING_VALUE": "FOOO",
 				"INT_VALUE":    "10",
 			},
-			testAnalyzeStructShouldSucceed,
+			Then: testAnalyzeStructShouldSucceed,
 		},
 		{
-			"WithMapOfValues",
-			&struct {
+			Label: "WithMapOfValues",
+			Source: &struct {
 				Config map[string]string
 			}{},
-			[]*envValue{
+			Expectation: []*envValue{
 				{"FOO", path{"Config", "foo"}},
 				{"MEH", path{"Config", "bar"}},
 				{"BAR", path{"Config", "biz"}},
 			},
-			map[string]string{
+			Env: map[string]string{
 				"CONFIG_FOO": "FOO",
 				"CONFIG_BAR": "MEH",
 				"CONFIG_BIZ": "BAR",
 			},
-			testAnalyzeStructShouldSucceed,
+			Then: testAnalyzeStructShouldSucceed,
 		},
 		{
-			"WithMapOfStructValues",
-			&struct {
+			Label: "WithMapOfStructValues",
+			Source: &struct {
 				Config map[string]basicAppConfig
 			}{},
-			[]*envValue{
+			Expectation: []*envValue{
 				{"FOO", path{"Config", "foo", "StringValue"}},
 				{"MEH", path{"Config", "bar", "StringValue"}},
 				{"BAR", path{"Config", "biz", "StringValue"}},
 			},
-			map[string]string{
+			Env: map[string]string{
 				"CONFIG_FOO_STRING_VALUE": "FOO",
 				"CONFIG_BAR_STRING_VALUE": "MEH",
 				"CONFIG_BIZ_STRING_VALUE": "BAR",
 			},
-			testAnalyzeStructShouldSucceed,
+			Then: testAnalyzeStructShouldSucceed,
 		},
 		{
-			"WithMapOfStructPtr",
-			&struct {
+			Label: "WithMapOfStructPtr",
+			Source: &struct {
 				Config map[string]*basicAppConfig
 			}{},
-			[]*envValue{
+			Expectation: []*envValue{
 				{"FOO", path{"Config", "foo", "StringValue"}},
 				{"MEH", path{"Config", "bar", "StringValue"}},
 				{"BAR", path{"Config", "biz", "StringValue"}},
 			},
-			map[string]string{
+			Env: map[string]string{
 				"CONFIG_FOO_STRING_VALUE": "FOO",
 				"CONFIG_BAR_STRING_VALUE": "MEH",
 				"CONFIG_BIZ_STRING_VALUE": "BAR",
 			},
-			testAnalyzeStructShouldSucceed,
+			Then: testAnalyzeStructShouldSucceed,
 		},
 		{
-			"WithMapOfMapOfPtrStruct",
-			&struct {
+			Label: "WithMapOfMapOfPtrStruct",
+			Source: &struct {
 				Config map[int]map[string]*basicAppConfig
 			}{},
-			[]*envValue{
+			Expectation: []*envValue{
 				{"FOO", path{"Config", "0", "foo", "StringValue"}},
 				{"MEH", path{"Config", "1", "bar", "StringValue"}},
 				{"BAR", path{"Config", "0", "biz", "StringValue"}},
 			},
-			map[string]string{
+			Env: map[string]string{
 				"CONFIG_0_FOO_STRING_VALUE": "FOO",
 				"CONFIG_1_BAR_STRING_VALUE": "MEH",
 				"CONFIG_0_BIZ_STRING_VALUE": "BAR",
 			},
-			testAnalyzeStructShouldSucceed,
+			Then: testAnalyzeStructShouldSucceed,
 		},
 		{
-			"WithSliceToValue",
-			&struct {
+			Label: "WithSliceToValue",
+			Source: &struct {
 				Config []int
 			}{},
-			[]*envValue{
+			Expectation: []*envValue{
 				{"FOOO", path{"Config", "0"}},
 				{"10", path{"Config", "1"}},
 				{"true", path{"Config", "2"}},
 			},
-			map[string]string{
+			Env: map[string]string{
 				"CONFIG_0": "FOOO",
 				"CONFIG_1": "10",
 				"CONFIG_2": "true",
 			},
-			testAnalyzeStructShouldSucceed,
+			Then: testAnalyzeStructShouldSucceed,
 		},
 		{
-			"WithSliceToValueAndInvalidKey",
-			&struct {
+			Label: "WithSliceToValueAndInvalidKey",
+			Source: &struct {
 				Config []int
 			}{},
-			[]*envValue{},
-			map[string]string{
+			Expectation: []*envValue{},
+			Env: map[string]string{
 				"CONFIG_0":      "FOOO",
 				"CONFIG_1":      "10",
 				"CONFIG_PATATE": "true",
 			},
-			testAnalyzeStructShouldFail,
+			Then: testAnalyzeStructShouldFail,
 		},
 		{
-			"WithAnArrayToValue",
-			&struct {
+			Label: "WithAnArrayToValue",
+			Source: &struct {
 				Config [10]int
 			}{},
-			[]*envValue{
+			Expectation: []*envValue{
 				{"FOOO", path{"Config", "0"}},
 				{"10", path{"Config", "1"}},
 				{"true", path{"Config", "2"}},
 			},
-			map[string]string{
+			Env: map[string]string{
 				"CONFIG_0": "FOOO",
 				"CONFIG_1": "10",
 				"CONFIG_2": "true",
 			},
-			testAnalyzeStructShouldSucceed,
+			Then: testAnalyzeStructShouldSucceed,
 		},
 		{
-			"WithAnArrayAndAnOutOfBoundIndex",
-			&struct {
+			Label: "WithAnArrayAndAnOutOfBoundIndex",
+			Source: &struct {
 				Config [10]int
 			}{},
-			[]*envValue{},
-			map[string]string{
+			Expectation: []*envValue{},
+			Env: map[string]string{
 				"CONFIG_11": "10",
 			},
-			testAnalyzeStructShouldFail,
+			Then: testAnalyzeStructShouldFail,
 		},
 		{
-			"WithAnArrayToValue",
-			&struct {
+			Label: "WithAnArrayToValue",
+			Source: &struct {
 				Config [10]int
 			}{},
-			[]*envValue{
+			Expectation: []*envValue{
 				{"FOOO", path{"Config", "0"}},
 				{"10", path{"Config", "1"}},
 				{"true", path{"Config", "2"}},
 			},
-			map[string]string{
+			Env: map[string]string{
 				"CONFIG_0": "FOOO",
 				"CONFIG_1": "10",
 				"CONFIG_2": "true",
 			},
-			testAnalyzeStructShouldSucceed,
+			Then: testAnalyzeStructShouldSucceed,
 		},
 		{
-			"WithASliceToStruct",
-			&struct {
+			Label: "WithASliceToStruct",
+			Source: &struct {
 				Config []basicAppConfig
 			}{},
-			[]*envValue{
+			Expectation: []*envValue{
 				{"FOOO", path{"Config", "0", "StringValue"}},
 				{"10", path{"Config", "0", "IntValue"}},
 				{"MIMI", path{"Config", "1", "StringValue"}},
 				{"15", path{"Config", "1", "IntValue"}},
 			},
-			map[string]string{
+			Env: map[string]string{
 				"CONFIG_0_STRING_VALUE": "FOOO",
 				"CONFIG_0_INT_VALUE":    "10",
 				"CONFIG_1_STRING_VALUE": "MIMI",
 				"CONFIG_1_INT_VALUE":    "15",
 			},
-			testAnalyzeStructShouldSucceed,
+			Then: testAnalyzeStructShouldSucceed,
 		},
 		{
-			"WithASliceToASliceToStruct",
-			&struct {
+			Label: "WithASliceToASliceToStruct",
+			Source: &struct {
 				Config [][]basicAppConfig
 			}{},
-			[]*envValue{
+			Expectation: []*envValue{
 				{"FOOO", path{"Config", "0", "0", "StringValue"}},
 				{"10", path{"Config", "0", "0", "IntValue"}},
 				{"MIMI", path{"Config", "1", "1", "StringValue"}},
 				{"15", path{"Config", "1", "1", "IntValue"}},
 			},
-			map[string]string{
+			Env: map[string]string{
 				"CONFIG_0_0_STRING_VALUE": "FOOO",
 				"CONFIG_0_0_INT_VALUE":    "10",
 				"CONFIG_1_1_STRING_VALUE": "MIMI",
 				"CONFIG_1_1_INT_VALUE":    "15",
 			},
-			testAnalyzeStructShouldSucceed,
+			Then: testAnalyzeStructShouldSucceed,
 		},
 		{
-			"WithASliceToAMapToStruct",
-			&struct {
+			Label: "WithASliceToAMapToStruct",
+			Source: &struct {
 				Config []map[string]basicAppConfig
 			}{},
-			[]*envValue{
+			Expectation: []*envValue{
 				{"FOOO", path{"Config", "0", "foo", "StringValue"}},
 				{"10", path{"Config", "0", "foo", "IntValue"}},
 				{"MIMI", path{"Config", "1", "bar", "StringValue"}},
 				{"15", path{"Config", "1", "bar", "IntValue"}},
 			},
-			map[string]string{
+			Env: map[string]string{
 				"CONFIG_0_FOO_STRING_VALUE": "FOOO",
 				"CONFIG_0_FOO_INT_VALUE":    "10",
 				"CONFIG_1_BAR_STRING_VALUE": "MIMI",
 				"CONFIG_1_BAR_INT_VALUE":    "15",
 			},
-			testAnalyzeStructShouldSucceed,
+			Then: testAnalyzeStructShouldSucceed,
 		},
 		{
-			"WithAFunc",
-			&struct {
+			Label: "WithAFunc",
+			Source: &struct {
 				Config basicAppConfig
 				Time   func() time.Time
-			}{}, []*envValue{
+			}{}, Expectation: []*envValue{
 				{"FOOO", path{"Config", "StringValue"}},
 				{"10", path{"Config", "IntValue"}},
 				{"true", path{"Config", "BoolValue"}},
 			},
-			map[string]string{
+			Env: map[string]string{
 				"CONFIG_STRING_VALUE": "FOOO",
 				"CONFIG_INT_VALUE":    "10",
 				"CONFIG_BOOL_VALUE":   "true",
 			},
-			testAnalyzeStructShouldSucceed,
+			Then: testAnalyzeStructShouldSucceed,
 		},
 		{
-			"WithAWebBasicAuth",
-			&struct {
+			Label: "WithAWebBasicAuth",
+			Source: &struct {
 				Basic     *Basic
 				UsersFile string
-			}{}, []*envValue{
+			}{}, Expectation: []*envValue{
 				{"UserZero", path{"Basic", "0"}},
 				{"UserOne", path{"Basic", "1"}},
 				{"path/to/file", path{"UsersFile"}},
 			},
-			map[string]string{
+			Env: map[string]string{
 				"BASIC_0":    "UserZero",
 				"BASIC_1":    "UserOne",
 				"USERS_FILE": "path/to/file",
 			},
-			testAnalyzeStructShouldSucceed,
+			Then: testAnalyzeStructShouldSucceed,
 		},
 	}
 
@@ -649,16 +649,16 @@ func TestWithArray(t *testing.T) {
 		Env         map[string]string
 		Then        testAnalyzeStructThenHook
 	}{
-		&config,
-		[]*envValue{
+		Source: &config,
+		Expectation: []*envValue{
 			{"one", path{"StringArray", "0"}},
 			{"two", path{"StringArray", "1"}},
 		},
-		map[string]string{
+		Env: map[string]string{
 			"STRING_ARRAY_0": "one",
 			"STRING_ARRAY_1": "two",
 		},
-		testAnalyzeStructShouldSucceed,
+		Then: testAnalyzeStructShouldSucceed,
 	}
 
 	setupEnv(testCase.Env)
@@ -682,18 +682,18 @@ func TestWithSliceToValue(t *testing.T) {
 		Config []int
 	}{}
 	testCase := testcase{
-		&config,
-		[]*envValue{
+		Source: &config,
+		Expectation: []*envValue{
 			{"FOOO", path{"Config", "0"}},
 			{"10", path{"Config", "1"}},
 			{"true", path{"Config", "2"}},
 		},
-		map[string]string{
+		Env: map[string]string{
 			"CONFIG_0": "FOOO",
 			"CONFIG_1": "10",
 			"CONFIG_2": "true",
 		},
-		testAnalyzeStructShouldSucceed,
+		Then: testAnalyzeStructShouldSucceed,
 	}
 
 	setupEnv(testCase.Env)
@@ -715,33 +715,33 @@ func TestNextLevelKeys(t *testing.T) {
 	testCases := []struct {
 		Label       string
 		Prefix      string
-		EnvVars     []string
+		Env         []string
 		Expectation []string
 	}{
 		{
-			"WithPrefix",
-			"CONFIG_APP",
-			[]string{
+			Label:  "WithPrefix",
+			Prefix: "CONFIG_APP",
+			Env: []string{
 				"CONFIG_APP_BATMAN_FOO",
 				"CONFIG_APP_ROBIN_FOO",
 				"CONFIG_APP_JOCKER_FOO",
 			},
-			[]string{
+			Expectation: []string{
 				"CONFIG_APP_BATMAN",
 				"CONFIG_APP_ROBIN",
 				"CONFIG_APP_JOCKER",
 			},
 		},
 		{
-			"WithDuplicates",
-			"CONFIG_APP",
-			[]string{
+			Label:  "WithDuplicates",
+			Prefix: "CONFIG_APP",
+			Env: []string{
 				"CONFIG_APP_BATMAN_FOO",
 				"CONFIG_APP_ROBIN_FOO",
 				"CONFIG_APP_JOCKER_FOO",
 				"CONFIG_APP_BATMAN_BAR",
 			},
-			[]string{
+			Expectation: []string{
 				"CONFIG_APP_BATMAN",
 				"CONFIG_APP_ROBIN",
 				"CONFIG_APP_JOCKER",
@@ -752,7 +752,7 @@ func TestNextLevelKeys(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.Label, func(t *testing.T) {
-			res := subject.nextLevelKeys(testCase.Prefix, testCase.EnvVars)
+			res := subject.nextLevelKeys(testCase.Prefix, testCase.Env)
 			for i, exp := range testCase.Expectation {
 				if exp != res[i] {
 					t.Logf("Unexpected value, expected [%s] got [%s]", exp, res[i])
@@ -774,16 +774,16 @@ func TestEnvVarsWithPrefix(t *testing.T) {
 		Expectation []string
 	}{
 		{
-			"WithPrefix",
-			"STAERT_APP",
-			map[string]string{
+			Label:  "WithPrefix",
+			Prefix: "STAERT_APP",
+			Env: map[string]string{
 				"STRING_VALUE":          "FOOO",
 				"INT_VALUE":             "10",
 				"BOOL_VALUE":            "true",
 				"STAERT_APP_BOOL_VALUE": "true",
 				"STAERT_APP_BAR_VALUE":  "true",
 			},
-			[]string{"STAERT_APP_BAR_VALUE", "STAERT_APP_BOOL_VALUE"},
+			Expectation: []string{"STAERT_APP_BAR_VALUE", "STAERT_APP_BOOL_VALUE"},
 		},
 	}
 
@@ -810,9 +810,9 @@ func TestUnique(t *testing.T) {
 		Expectation []string
 	}{
 		{
-			"WithDuplicates",
-			[]string{"FOO", "BAR", "BIZ", "FOO", "BIZ"},
-			[]string{"FOO", "BAR", "BIZ"},
+			Label:       "WithDuplicates",
+			In:          []string{"FOO", "BAR", "BIZ", "FOO", "BIZ"},
+			Expectation: []string{"FOO", "BAR", "BIZ"},
 		},
 	}
 
