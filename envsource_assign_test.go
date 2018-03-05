@@ -51,8 +51,8 @@ func TestAssignValues(t *testing.T) {
 				OtherStringValue string
 			}{},
 			[]*envValue{
-				&envValue{"FOO", path{"StringValue"}},
-				&envValue{"BAR", path{"OtherStringValue"}},
+				{"FOO", path{"StringValue"}},
+				{"BAR", path{"OtherStringValue"}},
 			},
 			&struct {
 				StringValue      string
@@ -66,8 +66,8 @@ func TestAssignValues(t *testing.T) {
 				IntValue    int
 			}{},
 			[]*envValue{
-				&envValue{"FOO", path{"StringValue"}},
-				&envValue{"1", path{"IntValue"}},
+				{"FOO", path{"StringValue"}},
+				{"1", path{"IntValue"}},
 			},
 			&struct {
 				StringValue string
@@ -81,10 +81,10 @@ func TestAssignValues(t *testing.T) {
 				Next        basicAppConfig
 			}{},
 			[]*envValue{
-				&envValue{"FOO", path{"StringValue"}},
-				&envValue{"1", path{"Next", "IntValue"}},
-				&envValue{"true", path{"Next", "BoolValue"}},
-				&envValue{"string", path{"Next", "StringValue"}},
+				{"FOO", path{"StringValue"}},
+				{"1", path{"Next", "IntValue"}},
+				{"true", path{"Next", "BoolValue"}},
+				{"string", path{"Next", "StringValue"}},
 			},
 			&struct {
 				StringValue string
@@ -102,10 +102,10 @@ func TestAssignValues(t *testing.T) {
 				NextPointer *basicAppConfig
 			}{},
 			[]*envValue{
-				&envValue{"FOO", path{"StringValue"}},
-				&envValue{"1", path{"NextPointer", "IntValue"}},
-				&envValue{"true", path{"NextPointer", "BoolValue"}},
-				&envValue{"string", path{"NextPointer", "StringValue"}},
+				{"FOO", path{"StringValue"}},
+				{"1", path{"NextPointer", "IntValue"}},
+				{"true", path{"NextPointer", "BoolValue"}},
+				{"string", path{"NextPointer", "StringValue"}},
 			},
 			&struct {
 				StringValue string
@@ -123,10 +123,10 @@ func TestAssignValues(t *testing.T) {
 				NextPointer **basicAppConfig
 			}{},
 			[]*envValue{
-				&envValue{"FOO", path{"StringValue"}},
-				&envValue{"1", path{"NextPointer", "IntValue"}},
-				&envValue{"true", path{"NextPointer", "BoolValue"}},
-				&envValue{"string", path{"NextPointer", "StringValue"}},
+				{"FOO", path{"StringValue"}},
+				{"1", path{"NextPointer", "IntValue"}},
+				{"true", path{"NextPointer", "BoolValue"}},
+				{"string", path{"NextPointer", "StringValue"}},
 			},
 			expectedPtrPtr,
 		},
@@ -134,7 +134,7 @@ func TestAssignValues(t *testing.T) {
 			"WithWrongPath",
 			&delegatorType{},
 			[]*envValue{
-				&envValue{"FOO", path{"WrongPath"}},
+				{"FOO", path{"WrongPath"}},
 			},
 			&delegatorType{},
 		},
@@ -142,8 +142,8 @@ func TestAssignValues(t *testing.T) {
 			"WithInterfaceDelegation",
 			&delegatorType{},
 			[]*envValue{
-				&envValue{"FOO", path{"StringValue"}},
-				&envValue{"1", path{"IntValue"}},
+				{"FOO", path{"StringValue"}},
+				{"1", path{"IntValue"}},
 			},
 			&delegatorType{
 				IntValue:    1,
@@ -156,9 +156,9 @@ func TestAssignValues(t *testing.T) {
 				Config map[string]string
 			}{},
 			[]*envValue{
-				&envValue{"FOO", path{"Config", "foo"}},
-				&envValue{"MEH", path{"Config", "bar"}},
-				&envValue{"BAR", path{"Config", "biz"}},
+				{"FOO", path{"Config", "foo"}},
+				{"MEH", path{"Config", "bar"}},
+				{"BAR", path{"Config", "biz"}},
 			},
 			&struct {
 				Config map[string]string
@@ -176,9 +176,9 @@ func TestAssignValues(t *testing.T) {
 				Config map[string]int
 			}{},
 			[]*envValue{
-				&envValue{"1", path{"Config", "foo"}},
-				&envValue{"2", path{"Config", "bar"}},
-				&envValue{"3", path{"Config", "biz"}},
+				{"1", path{"Config", "foo"}},
+				{"2", path{"Config", "bar"}},
+				{"3", path{"Config", "biz"}},
 			},
 			&struct {
 				Config map[string]int
@@ -196,9 +196,9 @@ func TestAssignValues(t *testing.T) {
 				Config map[int]int
 			}{},
 			[]*envValue{
-				&envValue{"1", path{"Config", "1"}},
-				&envValue{"2", path{"Config", "2"}},
-				&envValue{"3", path{"Config", "3"}},
+				{"1", path{"Config", "1"}},
+				{"2", path{"Config", "2"}},
+				{"3", path{"Config", "3"}},
 			},
 			&struct {
 				Config map[int]int
@@ -216,8 +216,8 @@ func TestAssignValues(t *testing.T) {
 				Config map[string]basicAppConfig
 			}{},
 			[]*envValue{
-				&envValue{"FOOO", path{"Config", "foo", "StringValue"}},
-				&envValue{"10", path{"Config", "foo", "IntValue"}},
+				{"FOOO", path{"Config", "foo", "StringValue"}},
+				{"10", path{"Config", "foo", "IntValue"}},
 			},
 			&struct {
 				Config map[string]basicAppConfig
@@ -236,8 +236,8 @@ func TestAssignValues(t *testing.T) {
 				Config map[int]basicAppConfig
 			}{},
 			[]*envValue{
-				&envValue{"FOOO", path{"Config", "0", "StringValue"}},
-				&envValue{"10", path{"Config", "0", "IntValue"}},
+				{"FOOO", path{"Config", "0", "StringValue"}},
+				{"10", path{"Config", "0", "IntValue"}},
 			},
 			&struct {
 				Config map[int]basicAppConfig
@@ -256,8 +256,8 @@ func TestAssignValues(t *testing.T) {
 				Config []int
 			}{},
 			[]*envValue{
-				&envValue{"1", path{"Config", "0"}},
-				&envValue{"10", path{"Config", "1"}},
+				{"1", path{"Config", "0"}},
+				{"10", path{"Config", "1"}},
 			},
 			&struct {
 				Config []int
@@ -271,12 +271,12 @@ func TestAssignValues(t *testing.T) {
 				Config []basicAppConfig
 			}{},
 			[]*envValue{
-				&envValue{"Test", path{"Config", "0", "StringValue"}},
-				&envValue{"10", path{"Config", "0", "IntValue"}},
-				&envValue{"true", path{"Config", "0", "BoolValue"}},
-				&envValue{"Test2", path{"Config", "1", "StringValue"}},
-				&envValue{"20", path{"Config", "1", "IntValue"}},
-				&envValue{"false", path{"Config", "1", "BoolValue"}},
+				{"Test", path{"Config", "0", "StringValue"}},
+				{"10", path{"Config", "0", "IntValue"}},
+				{"true", path{"Config", "0", "BoolValue"}},
+				{"Test2", path{"Config", "1", "StringValue"}},
+				{"20", path{"Config", "1", "IntValue"}},
+				{"false", path{"Config", "1", "BoolValue"}},
 			},
 			&struct {
 				Config []basicAppConfig
@@ -301,12 +301,12 @@ func TestAssignValues(t *testing.T) {
 				Config []*basicAppConfig
 			}{},
 			[]*envValue{
-				&envValue{"Test", path{"Config", "0", "StringValue"}},
-				&envValue{"10", path{"Config", "0", "IntValue"}},
-				&envValue{"true", path{"Config", "0", "BoolValue"}},
-				&envValue{"Test2", path{"Config", "1", "StringValue"}},
-				&envValue{"20", path{"Config", "1", "IntValue"}},
-				&envValue{"false", path{"Config", "1", "BoolValue"}},
+				{"Test", path{"Config", "0", "StringValue"}},
+				{"10", path{"Config", "0", "IntValue"}},
+				{"true", path{"Config", "0", "BoolValue"}},
+				{"Test2", path{"Config", "1", "StringValue"}},
+				{"20", path{"Config", "1", "IntValue"}},
+				{"false", path{"Config", "1", "BoolValue"}},
 			},
 			&struct {
 				Config []*basicAppConfig
@@ -342,17 +342,17 @@ func TestAssignValues(t *testing.T) {
 
 func TestFilterEnvVarWithPrefix(t *testing.T) {
 	envSource := []*envValue{
-		&envValue{"FOOO", path{"Config", "0", "foo", "StringValue"}},
-		&envValue{"10", path{"Config", "0", "foo", "IntValue"}},
-		&envValue{"10", path{"Config", "IntValue"}},
-		&envValue{"10", path{"Config", "0", "0", "IntValue"}},
+		{"FOOO", path{"Config", "0", "foo", "StringValue"}},
+		{"10", path{"Config", "0", "foo", "IntValue"}},
+		{"10", path{"Config", "IntValue"}},
+		{"10", path{"Config", "0", "0", "IntValue"}},
 	}
 
 	result := filterEnvVarWithPrefix(envSource, []string{"Config", "0", "foo"})
 
 	expected := []*envValue{
-		&envValue{"FOOO", path{"StringValue"}},
-		&envValue{"10", path{"IntValue"}},
+		{"FOOO", path{"StringValue"}},
+		{"10", path{"IntValue"}},
 	}
 	assert.Exactly(t, expected, result)
 }

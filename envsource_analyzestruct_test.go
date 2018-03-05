@@ -112,9 +112,9 @@ func TestAnalyzeStruct(t *testing.T) {
 			"WithBasicConfiguration",
 			&basicAppConfig{},
 			[]*envValue{
-				&envValue{"FOOO", path{"StringValue"}},
-				&envValue{"10", path{"IntValue"}},
-				&envValue{"true", path{"BoolValue"}},
+				{"FOOO", path{"StringValue"}},
+				{"10", path{"IntValue"}},
+				{"true", path{"BoolValue"}},
 			},
 			map[string]string{
 				"STRING_VALUE": "FOOO",
@@ -130,7 +130,7 @@ func TestAnalyzeStruct(t *testing.T) {
 				IntValue   int
 			}{},
 			[]*envValue{
-				&envValue{"10", path{"IntValue"}},
+				{"10", path{"IntValue"}},
 			},
 			map[string]string{
 				"UNEXPORTED": "FOOO",
@@ -145,10 +145,10 @@ func TestAnalyzeStruct(t *testing.T) {
 				FloatValue float32
 			}{},
 			[]*envValue{
-				&envValue{"FOOO", path{"StringValue"}},
-				&envValue{"10", path{"IntValue"}},
-				&envValue{"true", path{"BoolValue"}},
-				&envValue{"42.1", path{"FloatValue"}},
+				{"FOOO", path{"StringValue"}},
+				{"10", path{"IntValue"}},
+				{"true", path{"BoolValue"}},
+				{"42.1", path{"FloatValue"}},
 			},
 			map[string]string{
 				"STRING_VALUE": "FOOO",
@@ -164,9 +164,9 @@ func TestAnalyzeStruct(t *testing.T) {
 				Config basicAppConfig
 			}{},
 			[]*envValue{
-				&envValue{"FOOO", path{"Config", "StringValue"}},
-				&envValue{"10", path{"Config", "IntValue"}},
-				&envValue{"true", path{"Config", "BoolValue"}},
+				{"FOOO", path{"Config", "StringValue"}},
+				{"10", path{"Config", "IntValue"}},
+				{"true", path{"Config", "BoolValue"}},
 			},
 			map[string]string{
 				"CONFIG_STRING_VALUE": "FOOO",
@@ -183,9 +183,9 @@ func TestAnalyzeStruct(t *testing.T) {
 				}
 			}{},
 			[]*envValue{
-				&envValue{"FOOO", path{"Nested", "Config", "StringValue"}},
-				&envValue{"10", path{"Nested", "Config", "IntValue"}},
-				&envValue{"true", path{"Nested", "Config", "BoolValue"}},
+				{"FOOO", path{"Nested", "Config", "StringValue"}},
+				{"10", path{"Nested", "Config", "IntValue"}},
+				{"true", path{"Nested", "Config", "BoolValue"}},
 			},
 			map[string]string{
 				"NESTED_CONFIG_STRING_VALUE": "FOOO",
@@ -200,9 +200,9 @@ func TestAnalyzeStruct(t *testing.T) {
 				Config *basicAppConfig
 			}{},
 			[]*envValue{
-				&envValue{"FOOO", path{"Config", "StringValue"}},
-				&envValue{"10", path{"Config", "IntValue"}},
-				&envValue{"true", path{"Config", "BoolValue"}},
+				{"FOOO", path{"Config", "StringValue"}},
+				{"10", path{"Config", "IntValue"}},
+				{"true", path{"Config", "BoolValue"}},
 			},
 			map[string]string{
 				"CONFIG_STRING_VALUE": "FOOO",
@@ -219,9 +219,9 @@ func TestAnalyzeStruct(t *testing.T) {
 				}
 			}{},
 			[]*envValue{
-				&envValue{"FOOO", path{"Nested", "Config", "StringValue"}},
-				&envValue{"10", path{"Nested", "Config", "IntValue"}},
-				&envValue{"true", path{"Nested", "Config", "BoolValue"}},
+				{"FOOO", path{"Nested", "Config", "StringValue"}},
+				{"10", path{"Nested", "Config", "IntValue"}},
+				{"true", path{"Nested", "Config", "BoolValue"}},
 			},
 			map[string]string{
 				"NESTED_CONFIG_STRING_VALUE": "FOOO",
@@ -238,9 +238,9 @@ func TestAnalyzeStruct(t *testing.T) {
 				}
 			}{},
 			[]*envValue{
-				&envValue{"FOOO", path{"Nested", "Config", "StringValue"}},
-				&envValue{"10", path{"Nested", "Config", "IntValue"}},
-				&envValue{"true", path{"Nested", "Config", "BoolValue"}},
+				{"FOOO", path{"Nested", "Config", "StringValue"}},
+				{"10", path{"Nested", "Config", "IntValue"}},
+				{"true", path{"Nested", "Config", "BoolValue"}},
 			},
 			map[string]string{
 				"NESTED_CONFIG_STRING_VALUE": "FOOO",
@@ -255,7 +255,7 @@ func TestAnalyzeStruct(t *testing.T) {
 				IntValue *int
 			}{},
 			[]*envValue{
-				&envValue{"10", path{"IntValue"}},
+				{"10", path{"IntValue"}},
 			},
 			map[string]string{
 				"INT_VALUE": "10",
@@ -270,7 +270,7 @@ func TestAnalyzeStruct(t *testing.T) {
 				}
 			}{},
 			[]*envValue{
-				&envValue{"10", path{"Config", "IntValue"}},
+				{"10", path{"Config", "IntValue"}},
 			},
 			map[string]string{
 				"CONFIG_INT_VALUE": "10",
@@ -285,7 +285,7 @@ func TestAnalyzeStruct(t *testing.T) {
 				}
 			}{},
 			[]*envValue{
-				&envValue{"10", path{"Config", "IntValue"}},
+				{"10", path{"Config", "IntValue"}},
 			},
 			map[string]string{
 				"CONFIG_INT_VALUE": "10",
@@ -298,7 +298,7 @@ func TestAnalyzeStruct(t *testing.T) {
 				Config **int
 			}{},
 			[]*envValue{
-				&envValue{"10", path{"Config"}},
+				{"10", path{"Config"}},
 			},
 			map[string]string{
 				"CONFIG": "10",
@@ -311,9 +311,9 @@ func TestAnalyzeStruct(t *testing.T) {
 				Config **basicAppConfig
 			}{},
 			[]*envValue{
-				&envValue{"FOOO", path{"Config", "StringValue"}},
-				&envValue{"10", path{"Config", "IntValue"}},
-				&envValue{"true", path{"Config", "BoolValue"}},
+				{"FOOO", path{"Config", "StringValue"}},
+				{"10", path{"Config", "IntValue"}},
+				{"true", path{"Config", "BoolValue"}},
 			},
 			map[string]string{
 				"CONFIG_STRING_VALUE": "FOOO",
@@ -326,8 +326,8 @@ func TestAnalyzeStruct(t *testing.T) {
 			"WithInterfaceDelegation",
 			&delegatorType{},
 			[]*envValue{
-				&envValue{"FOOO", path{"StringValue"}},
-				&envValue{"10", path{"IntValue"}},
+				{"FOOO", path{"StringValue"}},
+				{"10", path{"IntValue"}},
 			},
 			map[string]string{
 				"STRING_VALUE": "FOOO",
@@ -341,9 +341,9 @@ func TestAnalyzeStruct(t *testing.T) {
 				Config map[string]string
 			}{},
 			[]*envValue{
-				&envValue{"FOO", path{"Config", "foo"}},
-				&envValue{"MEH", path{"Config", "bar"}},
-				&envValue{"BAR", path{"Config", "biz"}},
+				{"FOO", path{"Config", "foo"}},
+				{"MEH", path{"Config", "bar"}},
+				{"BAR", path{"Config", "biz"}},
 			},
 			map[string]string{
 				"CONFIG_FOO": "FOO",
@@ -358,9 +358,9 @@ func TestAnalyzeStruct(t *testing.T) {
 				Config map[string]basicAppConfig
 			}{},
 			[]*envValue{
-				&envValue{"FOO", path{"Config", "foo", "StringValue"}},
-				&envValue{"MEH", path{"Config", "bar", "StringValue"}},
-				&envValue{"BAR", path{"Config", "biz", "StringValue"}},
+				{"FOO", path{"Config", "foo", "StringValue"}},
+				{"MEH", path{"Config", "bar", "StringValue"}},
+				{"BAR", path{"Config", "biz", "StringValue"}},
 			},
 			map[string]string{
 				"CONFIG_FOO_STRING_VALUE": "FOO",
@@ -375,9 +375,9 @@ func TestAnalyzeStruct(t *testing.T) {
 				Config map[string]*basicAppConfig
 			}{},
 			[]*envValue{
-				&envValue{"FOO", path{"Config", "foo", "StringValue"}},
-				&envValue{"MEH", path{"Config", "bar", "StringValue"}},
-				&envValue{"BAR", path{"Config", "biz", "StringValue"}},
+				{"FOO", path{"Config", "foo", "StringValue"}},
+				{"MEH", path{"Config", "bar", "StringValue"}},
+				{"BAR", path{"Config", "biz", "StringValue"}},
 			},
 			map[string]string{
 				"CONFIG_FOO_STRING_VALUE": "FOO",
@@ -392,9 +392,9 @@ func TestAnalyzeStruct(t *testing.T) {
 				Config map[int]map[string]*basicAppConfig
 			}{},
 			[]*envValue{
-				&envValue{"FOO", path{"Config", "0", "foo", "StringValue"}},
-				&envValue{"MEH", path{"Config", "1", "bar", "StringValue"}},
-				&envValue{"BAR", path{"Config", "0", "biz", "StringValue"}},
+				{"FOO", path{"Config", "0", "foo", "StringValue"}},
+				{"MEH", path{"Config", "1", "bar", "StringValue"}},
+				{"BAR", path{"Config", "0", "biz", "StringValue"}},
 			},
 			map[string]string{
 				"CONFIG_0_FOO_STRING_VALUE": "FOO",
@@ -409,9 +409,9 @@ func TestAnalyzeStruct(t *testing.T) {
 				Config []int
 			}{},
 			[]*envValue{
-				&envValue{"FOOO", path{"Config", "0"}},
-				&envValue{"10", path{"Config", "1"}},
-				&envValue{"true", path{"Config", "2"}},
+				{"FOOO", path{"Config", "0"}},
+				{"10", path{"Config", "1"}},
+				{"true", path{"Config", "2"}},
 			},
 			map[string]string{
 				"CONFIG_0": "FOOO",
@@ -439,9 +439,9 @@ func TestAnalyzeStruct(t *testing.T) {
 				Config [10]int
 			}{},
 			[]*envValue{
-				&envValue{"FOOO", path{"Config", "0"}},
-				&envValue{"10", path{"Config", "1"}},
-				&envValue{"true", path{"Config", "2"}},
+				{"FOOO", path{"Config", "0"}},
+				{"10", path{"Config", "1"}},
+				{"true", path{"Config", "2"}},
 			},
 			map[string]string{
 				"CONFIG_0": "FOOO",
@@ -467,9 +467,9 @@ func TestAnalyzeStruct(t *testing.T) {
 				Config [10]int
 			}{},
 			[]*envValue{
-				&envValue{"FOOO", path{"Config", "0"}},
-				&envValue{"10", path{"Config", "1"}},
-				&envValue{"true", path{"Config", "2"}},
+				{"FOOO", path{"Config", "0"}},
+				{"10", path{"Config", "1"}},
+				{"true", path{"Config", "2"}},
 			},
 			map[string]string{
 				"CONFIG_0": "FOOO",
@@ -484,10 +484,10 @@ func TestAnalyzeStruct(t *testing.T) {
 				Config []basicAppConfig
 			}{},
 			[]*envValue{
-				&envValue{"FOOO", path{"Config", "0", "StringValue"}},
-				&envValue{"10", path{"Config", "0", "IntValue"}},
-				&envValue{"MIMI", path{"Config", "1", "StringValue"}},
-				&envValue{"15", path{"Config", "1", "IntValue"}},
+				{"FOOO", path{"Config", "0", "StringValue"}},
+				{"10", path{"Config", "0", "IntValue"}},
+				{"MIMI", path{"Config", "1", "StringValue"}},
+				{"15", path{"Config", "1", "IntValue"}},
 			},
 			map[string]string{
 				"CONFIG_0_STRING_VALUE": "FOOO",
@@ -503,10 +503,10 @@ func TestAnalyzeStruct(t *testing.T) {
 				Config [][]basicAppConfig
 			}{},
 			[]*envValue{
-				&envValue{"FOOO", path{"Config", "0", "0", "StringValue"}},
-				&envValue{"10", path{"Config", "0", "0", "IntValue"}},
-				&envValue{"MIMI", path{"Config", "1", "1", "StringValue"}},
-				&envValue{"15", path{"Config", "1", "1", "IntValue"}},
+				{"FOOO", path{"Config", "0", "0", "StringValue"}},
+				{"10", path{"Config", "0", "0", "IntValue"}},
+				{"MIMI", path{"Config", "1", "1", "StringValue"}},
+				{"15", path{"Config", "1", "1", "IntValue"}},
 			},
 			map[string]string{
 				"CONFIG_0_0_STRING_VALUE": "FOOO",
@@ -522,10 +522,10 @@ func TestAnalyzeStruct(t *testing.T) {
 				Config []map[string]basicAppConfig
 			}{},
 			[]*envValue{
-				&envValue{"FOOO", path{"Config", "0", "foo", "StringValue"}},
-				&envValue{"10", path{"Config", "0", "foo", "IntValue"}},
-				&envValue{"MIMI", path{"Config", "1", "bar", "StringValue"}},
-				&envValue{"15", path{"Config", "1", "bar", "IntValue"}},
+				{"FOOO", path{"Config", "0", "foo", "StringValue"}},
+				{"10", path{"Config", "0", "foo", "IntValue"}},
+				{"MIMI", path{"Config", "1", "bar", "StringValue"}},
+				{"15", path{"Config", "1", "bar", "IntValue"}},
 			},
 			map[string]string{
 				"CONFIG_0_FOO_STRING_VALUE": "FOOO",
@@ -541,9 +541,9 @@ func TestAnalyzeStruct(t *testing.T) {
 				Config basicAppConfig
 				Time   func() time.Time
 			}{}, []*envValue{
-				&envValue{"FOOO", path{"Config", "StringValue"}},
-				&envValue{"10", path{"Config", "IntValue"}},
-				&envValue{"true", path{"Config", "BoolValue"}},
+				{"FOOO", path{"Config", "StringValue"}},
+				{"10", path{"Config", "IntValue"}},
+				{"true", path{"Config", "BoolValue"}},
 			},
 			map[string]string{
 				"CONFIG_STRING_VALUE": "FOOO",
@@ -558,9 +558,9 @@ func TestAnalyzeStruct(t *testing.T) {
 				Basic     *Basic
 				UsersFile string
 			}{}, []*envValue{
-				&envValue{"UserZero", path{"Basic", "0"}},
-				&envValue{"UserOne", path{"Basic", "1"}},
-				&envValue{"path/to/file", path{"UsersFile"}},
+				{"UserZero", path{"Basic", "0"}},
+				{"UserOne", path{"Basic", "1"}},
+				{"path/to/file", path{"UsersFile"}},
 			},
 			map[string]string{
 				"BASIC_0":    "UserZero",
@@ -651,8 +651,8 @@ func TestWithArray(t *testing.T) {
 	}{
 		&config,
 		[]*envValue{
-			&envValue{"one", path{"StringArray", "0"}},
-			&envValue{"two", path{"StringArray", "1"}},
+			{"one", path{"StringArray", "0"}},
+			{"two", path{"StringArray", "1"}},
 		},
 		map[string]string{
 			"STRING_ARRAY_0": "one",
@@ -684,9 +684,9 @@ func TestWithSliceToValue(t *testing.T) {
 	testCase := testcase{
 		&config,
 		[]*envValue{
-			&envValue{"FOOO", path{"Config", "0"}},
-			&envValue{"10", path{"Config", "1"}},
-			&envValue{"true", path{"Config", "2"}},
+			{"FOOO", path{"Config", "0"}},
+			{"10", path{"Config", "1"}},
+			{"true", path{"Config", "2"}},
 		},
 		map[string]string{
 			"CONFIG_0": "FOOO",
