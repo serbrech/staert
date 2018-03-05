@@ -49,7 +49,6 @@ func (e *envSource) LoadConfig(config interface{}) error {
 	configVal := reflect.ValueOf(config).Elem()
 
 	values, err := e.analyzeStruct(configVal.Type(), []string{})
-
 	if err != nil {
 		return err
 	}
@@ -73,7 +72,7 @@ func (p path) clone() []string {
 // Recursively scan the given config structure type information
 // and look for defined environment variables.
 func (e *envSource) analyzeStruct(configType reflect.Type, currentPath path) ([]*envValue, error) {
-	res := []*envValue{}
+	var res []*envValue
 
 	for i := 0; i < configType.NumField(); i++ {
 		field := configType.Field(i)
@@ -86,7 +85,6 @@ func (e *envSource) analyzeStruct(configType reflect.Type, currentPath path) ([]
 		// If we're facing an embedded struct
 		if field.Anonymous {
 			values, err := e.analyzeValue(field.Type, currentPath)
-
 			if err != nil {
 				return []*envValue{}, err
 			}
@@ -103,7 +101,6 @@ func (e *envSource) analyzeStruct(configType reflect.Type, currentPath path) ([]
 		}
 
 		values, err := e.analyzeValue(field.Type, append(currentPath, field.Name))
-
 		if err != nil {
 			return []*envValue{}, err
 		}
@@ -138,10 +135,7 @@ func (e *envSource) analyzeValue(valType reflect.Type, fieldPath path) ([]*envVa
 }
 
 func (e *envSource) analyzeIndexedType(valType reflect.Type, fieldPath path) ([]*envValue, error) {
-	var (
-		res []*envValue
-	)
-
+	var res []*envValue
 	prefix := e.envVarFromPath(fieldPath)
 	vars := e.envVarsWithPrefix(prefix)
 	nextKeys := unique(e.nextLevelKeys(prefix, vars))
@@ -154,7 +148,6 @@ func (e *envSource) analyzeIndexedType(valType reflect.Type, fieldPath path) ([]
 		if valType.Kind() == reflect.Array ||
 			valType.Kind() == reflect.Slice {
 			index, err := strconv.Atoi(key)
-
 			if err != nil {
 				return res, fmt.Errorf(
 					key,
@@ -175,7 +168,6 @@ func (e *envSource) analyzeIndexedType(valType reflect.Type, fieldPath path) ([]
 
 		valPath := append(fieldPath, key)
 		keyValues, err := e.analyzeValue(valType.Elem(), valPath)
-
 		if err != nil {
 			return res, err
 		}
@@ -190,7 +182,6 @@ func (e *envSource) loadValue(fieldPath path) []*envValue {
 	variableName := e.envVarFromPath(fieldPath)
 
 	value, ok := os.LookupEnv(variableName)
-
 	if !ok {
 		return []*envValue{}
 	}
@@ -300,9 +291,7 @@ func (e *envSource) assignMap(fieldVal reflect.Value, key string, val reflect.Va
 }
 
 func (e *envSource) assignArrays(fieldVal reflect.Value, envValues []*envValue, currentEnvValue *envValue) error {
-	var (
-		err error
-	)
+	var err error
 	arrayType := fieldVal.Type()
 	slice := reflect.Zero(reflect.SliceOf(arrayType.Elem()))
 	if !fieldVal.IsNil() {
@@ -361,7 +350,6 @@ func (e *envSource) setValue(value reflect.Value, strValue string) error {
 	}
 
 	parser, ok := e.parsers[value.Type()]
-
 	if !ok {
 		return fmt.Errorf(
 			"Unsupported type [%s], please consider adding custom parser",
@@ -370,7 +358,6 @@ func (e *envSource) setValue(value reflect.Value, strValue string) error {
 	}
 
 	err := parser.Set(strValue)
-
 	if err != nil {
 		return err
 	}
@@ -389,14 +376,13 @@ func (e *envSource) nextLevelKeys(prefix string, envVars []string) []string {
 			e.separator,
 		)[0]
 		res = append(res, prefix+e.separator+nextKey)
-
 	}
 
 	return res
 }
 
 func (e *envSource) envVarsWithPrefix(prefix string) []string {
-	res := []string{}
+	var res []string
 
 	for _, rawVar := range os.Environ() {
 		varName := strings.Split(rawVar, "=")[0]
