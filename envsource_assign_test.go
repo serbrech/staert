@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/containous/flaeg/parse"
-
 	"github.com/stretchr/testify/assert"
 )
 
