@@ -112,26 +112,21 @@ func (e *envSource) analyzeStruct(configType reflect.Type, currentPath path) ([]
 }
 
 func (e *envSource) analyzeValue(valType reflect.Type, fieldPath path) ([]*envValue, error) {
-	var (
-		res []*envValue
-		err error
-	)
 	switch valType.Kind() {
 	case reflect.Array, reflect.Slice, reflect.Map:
-		res, err = e.analyzeIndexedType(valType, fieldPath)
+		return e.analyzeIndexedType(valType, fieldPath)
 	case reflect.Ptr:
-		res, err = e.analyzeValue(valType.Elem(), fieldPath)
+		return e.analyzeValue(valType.Elem(), fieldPath)
 	case reflect.Struct:
-		res, err = e.analyzeStruct(valType, fieldPath)
+		return e.analyzeStruct(valType, fieldPath)
 	case reflect.Invalid, reflect.Chan, reflect.Func, reflect.Interface, reflect.UnsafePointer:
+		return nil, nil
 		//Skip these fields, don't throw...
 		//TODO : keep track of the fields ignored by the library to be able to list them.
 		//err = fmt.Errorf("type %s is not supported by EnvSource. fieldPath : %v", valType.Name(), fieldPath)
 	default:
-		res = e.loadValue(fieldPath)
+		return e.loadValue(fieldPath), nil
 	}
-
-	return res, err
 }
 
 func (e *envSource) analyzeIndexedType(valType reflect.Type, fieldPath path) ([]*envValue, error) {
@@ -145,31 +140,22 @@ func (e *envSource) analyzeIndexedType(valType reflect.Type, fieldPath path) ([]
 
 		// If we're on an Int based key, we need to be able to convert
 		// detected key to an int
-		if valType.Kind() == reflect.Array ||
-			valType.Kind() == reflect.Slice {
+		if valType.Kind() == reflect.Array || valType.Kind() == reflect.Slice {
 			index, err := strconv.Atoi(key)
 			if err != nil {
-				return res, fmt.Errorf(
-					key,
-					varName,
-				)
+				return nil, fmt.Errorf(key, varName)
 			}
 
-			if valType.Kind() == reflect.Array &&
-				index >= valType.Len() {
-				return res, fmt.Errorf(
-					"Detected key (%s) from variable %s is >= to array length %d",
-					key,
-					varName,
-					valType.Len(),
-				)
+			if valType.Kind() == reflect.Array && index >= valType.Len() {
+				return nil, fmt.Errorf("Detected key (%s) from variable %s is >= to array length %d",
+					key, varName, valType.Len())
 			}
 		}
 
 		valPath := append(fieldPath, key)
 		keyValues, err := e.analyzeValue(valType.Elem(), valPath)
 		if err != nil {
-			return res, err
+			return nil, err
 		}
 
 		res = append(res, keyValues...)
@@ -216,20 +202,17 @@ func (e *envSource) assignValues(configVal reflect.Value, envValues []*envValue,
 			if err != nil {
 				return err
 			}
-			break
 		case reflect.Struct:
 			err := e.assignValues(fieldVal, []*envValue{v}, []string{v.Path[0]})
 			if err != nil {
 				return err
 			}
-			break
 		case reflect.Array:
 		case reflect.Slice:
 			err := e.assignArrays(fieldVal, envValues, v)
 			if err != nil {
 				return err
 			}
-			break
 		case reflect.Map:
 			key := v.Path[1]
 			val := v.StrValue
@@ -248,16 +231,14 @@ func (e *envSource) assignValues(configVal reflect.Value, envValues []*envValue,
 					return err
 				}
 			}
-			break
 
 		default:
 			if parser, ok := e.parsers[fieldVal.Type()]; ok {
 				parser.Set(v.StrValue)
 				fieldVal.Set(reflect.ValueOf(parser.Get()))
 			} else {
-				fmt.Printf("PARSER NOT FOUND : %T\n", parser)
+				return fmt.Errorf("parser not found for field type [%T]", fieldVal)
 			}
-			break
 		}
 	}
 
@@ -265,9 +246,7 @@ func (e *envSource) assignValues(configVal reflect.Value, envValues []*envValue,
 }
 
 func (e *envSource) assignMap(fieldVal reflect.Value, key string, val reflect.Value) error {
-	var (
-		err error
-	)
+	var err error
 	mapType := fieldVal.Type()
 	if fieldVal.IsNil() {
 		fieldVal.Set(reflect.MakeMap(mapType))
@@ -287,11 +266,10 @@ func (e *envSource) assignMap(fieldVal reflect.Value, key string, val reflect.Va
 	} else {
 		fieldVal.SetMapIndex(reflect.ValueOf(parsedKey), val)
 	}
-	return err
+	return nil
 }
 
 func (e *envSource) assignArrays(fieldVal reflect.Value, envValues []*envValue, currentEnvValue *envValue) error {
-	var err error
 	arrayType := fieldVal.Type()
 	slice := reflect.Zero(reflect.SliceOf(arrayType.Elem()))
 	if !fieldVal.IsNil() {
@@ -301,7 +279,6 @@ func (e *envSource) assignArrays(fieldVal reflect.Value, envValues []*envValue, 
 	elemType := arrayType.Elem()
 
 	if elemType.Kind() != reflect.Struct && elemType.Kind() != reflect.Ptr {
-		fmt.Printf("slice elemkind %s\n", elemType.Kind())
 		parsedVal, err := e.getParsedValue(elemType, currentEnvValue.StrValue)
 		if err != nil {
 			return err
@@ -322,7 +299,7 @@ func (e *envSource) assignArrays(fieldVal reflect.Value, envValues []*envValue, 
 			fieldVal.Set(slice)
 		}
 	}
-	return err
+	return nil
 }
 
 func (e *envSource) getParsedValue(valType reflect.Type, stringValue string) (interface{}, error) {
@@ -334,37 +311,6 @@ func (e *envSource) getParsedValue(valType reflect.Type, stringValue string) (in
 		return parser.Get(), nil
 	}
 	return nil, fmt.Errorf("could not parse %s", stringValue)
-}
-
-func handleSlice(value reflect.Value, sliceVal reflect.Value) {
-	println("%s - %s", value.Kind(), sliceVal.Kind())
-}
-
-func (e *envSource) setValue(value reflect.Value, strValue string) error {
-
-	if !value.CanSet() {
-		return fmt.Errorf(
-			"Value [%v] cannot be set",
-			value,
-		)
-	}
-
-	parser, ok := e.parsers[value.Type()]
-	if !ok {
-		return fmt.Errorf(
-			"Unsupported type [%s], please consider adding custom parser",
-			value.Type().Name(),
-		)
-	}
-
-	err := parser.Set(strValue)
-	if err != nil {
-		return err
-	}
-
-	value.Set(reflect.ValueOf(parser).Elem().Convert(value.Type()))
-
-	return nil
 }
 
 func (e *envSource) nextLevelKeys(prefix string, envVars []string) []string {
