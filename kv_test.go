@@ -11,7 +11,6 @@ import (
 
 	"github.com/abronan/valkeyrie/store"
 	"github.com/containous/flaeg"
-	"github.com/containous/flaeg/parse"
 	"github.com/mitchellh/mapstructure"
 )
 
@@ -222,7 +221,7 @@ func TestKvSourceEmpty(t *testing.T) {
 			S1Int:    1,
 			S1String: "S1StringInitConfig",
 		},
-		DurationField: parse.Duration(time.Second),
+		DurationField: flaeg.Duration(time.Second),
 	}
 
 	//Test
@@ -252,7 +251,7 @@ func TestKvSourceEmpty(t *testing.T) {
 			S1Int:    1,
 			S1String: "S1StringInitConfig",
 		},
-		DurationField: parse.Duration(time.Second),
+		DurationField: flaeg.Duration(time.Second),
 	}
 
 	if !reflect.DeepEqual(expected, rootCmd.Config) {
@@ -319,7 +318,7 @@ func TestIntegrationMapstructureWithDecodeHookPointer(t *testing.T) {
 		PtrStruct1: &Struct1{
 			S1Int: 28,
 		},
-		DurationField: parse.Duration(28 * time.Nanosecond),
+		DurationField: flaeg.Duration(28 * time.Nanosecond),
 	}
 
 	if !reflect.DeepEqual(expected, config) {
@@ -347,7 +346,7 @@ func TestIntegrationMapstructureInitiatedPtrReset(t *testing.T) {
 			S1Int:    1,
 			S1String: "S1StringInitConfig",
 		},
-		DurationField: parse.Duration(28 * time.Second),
+		DurationField: flaeg.Duration(28 * time.Second),
 	}
 
 	//test
@@ -370,7 +369,7 @@ func TestIntegrationMapstructureInitiatedPtrReset(t *testing.T) {
 			S1Int:    24,
 			S1String: "S1StringInitConfig",
 		},
-		DurationField: parse.Duration(28 * time.Second),
+		DurationField: flaeg.Duration(28 * time.Second),
 	}
 
 	if !reflect.DeepEqual(expected, config) {
@@ -415,7 +414,7 @@ func TestParseKvSourceTrivial(t *testing.T) {
 		PtrStruct1: &Struct1{
 			S1Int: 28,
 		},
-		DurationField: parse.Duration(28 * time.Nanosecond),
+		DurationField: flaeg.Duration(28 * time.Nanosecond),
 	}
 
 	if !reflect.DeepEqual(expected, rootCmd.Config) {
@@ -458,7 +457,7 @@ func TestLoadConfigKvSourceNestedPtrsNil(t *testing.T) {
 			S1String:     "S1StringInitConfig",
 			S1PtrStruct3: &Struct3{},
 		},
-		DurationField: parse.Duration(21 * time.Second),
+		DurationField: flaeg.Duration(21 * time.Second),
 	}
 
 	if !reflect.DeepEqual(expected, config) {
@@ -508,7 +507,7 @@ func TestParseKvSourceNestedPtrsNil(t *testing.T) {
 			S1String:     "S1StringInitConfig",
 			S1PtrStruct3: &Struct3{},
 		},
-		DurationField: parse.Duration(21 * time.Second),
+		DurationField: flaeg.Duration(21 * time.Second),
 	}
 
 	if !reflect.DeepEqual(expected, rootCmd.Config) {
@@ -617,7 +616,7 @@ func TestCollateKvPairsNestedPointers(t *testing.T) {
 			S1String:     "S1StringInitConfig",
 			S1PtrStruct3: &Struct3{},
 		},
-		DurationField: parse.Duration(21 * time.Second),
+		DurationField: flaeg.Duration(21 * time.Second),
 	}
 
 	//test
