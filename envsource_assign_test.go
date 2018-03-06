@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/containous/flaeg/parse"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func getPtrPtrConfig() *struct {
@@ -330,12 +330,8 @@ func TestAssignValues(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(testCase.Label, func(t *testing.T) {
 			err := subject.assignValues(reflect.ValueOf(testCase.Source).Elem(), testCase.Values, []string{})
-			if err != nil {
-				t.Logf("Expected no error, got %s", err.Error())
-				t.Fail()
-			}
-
-			assert.Exactly(t, testCase.Expectation, testCase.Source)
+			require.NoError(t, err)
+			require.Exactly(t, testCase.Expectation, testCase.Source)
 		})
 	}
 }
@@ -354,5 +350,5 @@ func TestFilterEnvVarWithPrefix(t *testing.T) {
 		{"FOOO", path{"StringValue"}},
 		{"10", path{"IntValue"}},
 	}
-	assert.Exactly(t, expected, result)
+	require.Exactly(t, expected, result)
 }

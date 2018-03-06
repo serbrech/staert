@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/containous/flaeg/parse"
+	"github.com/stretchr/testify/require"
 )
 
 func setupEnv(env map[string]string) {
@@ -55,15 +56,10 @@ func (s sortableEnvValues) Swap(i, j int) {
 type testAnalyzeStructThenHook func(t *testing.T, expectation, result sortableEnvValues, err error)
 
 func testAnalyzeStructShouldSucceed(t *testing.T, expectation, result sortableEnvValues, err error) {
-	if err != nil {
-		t.Logf("Weren't expecting an error, got [%v]", err)
-		t.FailNow()
-	}
+	require := require.New(t)
 
-	if len(expectation) != len(result) {
-		t.Logf("Unexpected count of values returned: Expected [%d] got [%d]", len(expectation), len(result))
-		t.FailNow()
-	}
+	require.NoError(err)
+	require.Lenf(result, len(expectation), "Unexpected count of values returned")
 
 	// Sort by value, according to StrValue (which might not be the best
 	// idea ever), in order to ensure index based comparison consistency
@@ -71,31 +67,13 @@ func testAnalyzeStructShouldSucceed(t *testing.T, expectation, result sortableEn
 	sort.Sort(result)
 
 	for i, v := range expectation {
-		if v.StrValue != result[i].StrValue {
-			t.Logf("Expected [%v] got [%v]", *v, *result[i])
-			t.Fail()
-		}
-
-		if len(v.Path) != len(result[i].Path) {
-			t.Logf("Expected Path length of [%v] got [%v]", len(v.Path), len(result[i].Path))
-			t.FailNow()
-		}
-
-		for j, p := range v.Path {
-			if p != result[i].Path[j] {
-				t.Logf("Expected path term [%v] got [%v]", p, result[i].Path[j])
-				t.Fail()
-			}
-		}
-
+		require.Equal(v.StrValue, result[i].StrValue)
+		require.Exactly(v.Path, result[i].Path)
 	}
 }
 
 func testAnalyzeStructShouldFail(t *testing.T, expectation, result sortableEnvValues, err error) {
-	if err == nil {
-		t.Logf("Expected an error, got nothing")
-		t.Fail()
-	}
+	require.Error(t, err)
 }
 
 func TestAnalyzeStruct(t *testing.T) {
@@ -613,11 +591,7 @@ func TestEnvVarFromPath(t *testing.T) {
 			}
 
 			result := subject.envVarFromPath(testCase.Path)
-
-			if result != testCase.Expectation {
-				t.Logf("Expected [%s] got [%s]\n", testCase.Expectation, result)
-				t.Fail()
-			}
+			require.Exactly(t, testCase.Expectation, result)
 		})
 	}
 
@@ -640,16 +614,15 @@ type testcase struct {
 
 func TestWithArray(t *testing.T) {
 
-	config := struct {
+	sourceConfig := struct {
 		StringArray []string
 	}{}
 	testCase := struct {
 		Source      interface{}
 		Expectation []*envValue
 		Env         map[string]string
-		Then        testAnalyzeStructThenHook
 	}{
-		Source: &config,
+		Source: &sourceConfig,
 		Expectation: []*envValue{
 			{"one", path{"StringArray", "0"}},
 			{"two", path{"StringArray", "1"}},
@@ -658,22 +631,15 @@ func TestWithArray(t *testing.T) {
 			"STRING_ARRAY_0": "one",
 			"STRING_ARRAY_1": "two",
 		},
-		Then: testAnalyzeStructShouldSucceed,
 	}
 
 	setupEnv(testCase.Env)
 	parsers, _ := parse.LoadParsers(nil)
 	subject := &envSource{"", "_", parsers}
-	res, err := subject.analyzeStruct(
-		reflect.TypeOf(testCase.Source).Elem(),
-		path{},
-	)
-	testCase.Then(t, testCase.Expectation, res, err)
-	subject.assignValues(reflect.ValueOf(&config), res, []string{})
-	if config.StringArray[0] != "one" || config.StringArray[1] != "two" {
-		t.Logf("Expected [[one two]] got [%v]\n", config.StringArray)
-		t.FailNow()
-	}
+	res, _ := subject.analyzeStruct(reflect.TypeOf(testCase.Source).Elem(), path{})
+	subject.assignValues(reflect.ValueOf(&sourceConfig), res, []string{})
+
+	require.ElementsMatch(t, []string{"one", "two"}, sourceConfig.StringArray)
 	cleanupEnv(testCase.Env)
 }
 
@@ -697,12 +663,10 @@ func TestWithSliceToValue(t *testing.T) {
 	}
 
 	setupEnv(testCase.Env)
+
 	parsers, _ := parse.LoadParsers(nil)
 	subject := &envSource{"", "_", parsers}
-	res, err := subject.analyzeStruct(
-		reflect.TypeOf(testCase.Source).Elem(),
-		path{},
-	)
+	res, err := subject.analyzeStruct(reflect.TypeOf(testCase.Source).Elem(), path{})
 	testCase.Then(t, testCase.Expectation, res, err)
 	configVal := reflect.ValueOf(&config)
 	subject.assignValues(configVal, res, []string{})
@@ -753,12 +717,7 @@ func TestNextLevelKeys(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(testCase.Label, func(t *testing.T) {
 			res := subject.nextLevelKeys(testCase.Prefix, testCase.Env)
-			for i, exp := range testCase.Expectation {
-				if exp != res[i] {
-					t.Logf("Unexpected value, expected [%s] got [%s]", exp, res[i])
-					t.Fail()
-				}
-			}
+			require.ElementsMatch(t, testCase.Expectation, res)
 		})
 	}
 }
@@ -791,13 +750,7 @@ func TestEnvVarsWithPrefix(t *testing.T) {
 		t.Run(testCase.Label, func(t *testing.T) {
 			setupEnv(testCase.Env)
 			res := subject.envVarsWithPrefix(testCase.Prefix)
-			sort.Strings(res)
-			for i, envVar := range testCase.Expectation {
-				if res != nil && envVar != res[i] {
-					t.Logf("Invalid env variableName, expected [%s] got [%s]", envVar, res[i])
-					t.Fail()
-				}
-			}
+			require.ElementsMatch(t, testCase.Expectation, res)
 			cleanupEnv(testCase.Env)
 		})
 	}
@@ -819,12 +772,7 @@ func TestUnique(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(testCase.Label, func(t *testing.T) {
 			res := unique(testCase.In)
-			for i, val := range testCase.Expectation {
-				if res[i] != val {
-					t.Logf("Invalid result: expected [%s] got [%s]\n", val, res[i])
-					t.Fail()
-				}
-			}
+			require.ElementsMatch(t, testCase.Expectation, res)
 		})
 	}
 }
@@ -844,10 +792,8 @@ func TestKeyFromEnvVar(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.Label, func(t *testing.T) {
-			if res := subject.keyFromEnvVar(testCase.EnvVar, testCase.Prefix); res != testCase.Expectation {
-				t.Logf("Unexpected value, expected [%s] got [%s]", testCase.Expectation, res)
-				t.Fail()
-			}
+			res := subject.keyFromEnvVar(testCase.EnvVar, testCase.Prefix)
+			require.Equal(t, testCase.Expectation, res)
 		})
 	}
 }
